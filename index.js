@@ -1,4 +1,3 @@
-var del = require('del');
 var args = require('yargs').argv;
 var combine = require('stream-combiner');
 var merge = require('merge-stream');
@@ -13,6 +12,8 @@ function MvBuilder(gulp, config) {
    */
   gulp.task('help', $.taskListing);
   gulp.task('default', ['help']);
+  gulp.task('vet', ['jshint', 'jscs']);
+  gulp.task('build', ['requirejs', 'revision', 'cleanTemp']);
 
   /**
    * Updates project rules configuration files
@@ -45,8 +46,6 @@ function MvBuilder(gulp, config) {
       .pipe($.jscs.reporter())
       .pipe($.jscs.reporter('fail'));
   });
-
-  gulp.task('vet', ['jshint', 'jscs']);
 
   /**
    *  Karma task - starts unit tests
@@ -169,7 +168,7 @@ function MvBuilder(gulp, config) {
     if(args.template) {
       configUrl = config.root + 'configs/dist_template/config';
       return gulp.src([configUrl + '*.js'])
-        .pipe(rename('config.js'))
+        .pipe($.rename('config.js'))
         .pipe(gulp.dest(config.temp + '/scripts'));
     }
   });
@@ -309,7 +308,65 @@ function MvBuilder(gulp, config) {
       .pipe($.missingTranslations({ translationsSrc: config.translationFiles }));
   });
 
-  gulp.task('build', ['requirejs', 'revision', 'cleanTemp']);
+  /**
+   * Cleans less and sass files
+   **/
+  gulp.task('clean-styles', function () {
+    utils.log('Cleaning: ' + files);
+    return gulp.src([config.sassDest + '/**/*', config.lessDest + '/**/*'], {read: false})
+      .pipe($.rimraf());
+  });
+
+  /**
+   * Compiles SASS source files to css files
+   */
+  gulp.task('compile-sass', ['clean-styles'], function () {
+    utils.log('Compiling SASS --> CSS');
+
+    return gulp
+      .src(config.sassSrc)
+      .pipe($.sass({
+        includePaths: [config.compassMixins],
+        outputStyle: 'expanded',
+        errLogToConsole: true
+      }))
+      .pipe(gulp.dest(config.sassDest));
+  });
+
+  /**
+   * Watches for SASS files changes and triggers compilation
+   */
+  gulp.task('watch-sass', function(){
+    gulp.watch([config.sassSrc], ['compile-sass']);
+  });
+
+  /**
+   * Compiles LESS source files to css files
+   */
+  gulp.task('compile-less', ['clean-styles'], function () {
+    var filter = $.filter(utils.isNotPrivate);
+    utils.log('Compiling LESS --> CSS');
+
+    return gulp
+      .src(config.lessSrc)
+      .pipe($.plumber({
+        errorHandler: function (err) {
+          console.log(err);
+          this.emit('end');
+        }
+      }))
+      .pipe($.less())
+      .pipe($.autoprefixer({ browsers: config.browserslist }))
+      .pipe(filter)
+      .pipe(gulp.dest(config.lessDest));
+  });
+
+  /**
+   * Watches for LESS files changes and triggers compilation
+   */
+  gulp.task('watch-less', function(){
+    gulp.watch([config.lessSrc], ['compile-less']);
+  });
 }
 
 module.exports = MvBuilder;

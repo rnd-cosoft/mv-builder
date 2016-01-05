@@ -9,6 +9,7 @@ function Utils() {
   this.addTimestampComment = addTimestampComment;
   this.getRequireJsConfigPaths = getRequireJsConfigPaths;
   this.replaceRequireJsConfigPaths = replaceRequireJsConfigPaths;
+  this.isNotPrivate = isNotPrivate;
 
   /**
    * @desc Log a message or series of messages using chalk's blue color.
@@ -119,6 +120,15 @@ function Utils() {
     };
 
     return stream;
+  }
+
+  /**
+   * @desc A function which filters private files out. Private files contain underscores.
+   * @param file
+   * @returns {boolean}
+   */
+  function isNotPrivate(file){
+    return !/^_/.test(file.path.split('/').pop());
   }
 }
 
