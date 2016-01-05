@@ -3,6 +3,7 @@ var colors = $.util.colors;
 
 function Utils() {
 
+  this.requireJsPaths = null;
   this.log = log;
   this.addTimestampComment = addTimestampComment;
   this.getRequireJsConfigPaths = getRequireJsConfigPaths;
@@ -26,10 +27,10 @@ function Utils() {
 
   /**
    * @desc Replaces require js config paths
-   * @param pathsObject
    * @returns {Object}
    */
-  function replaceRequireJsConfigPaths(pathsObject) {
+  function replaceRequireJsConfigPaths() {
+    var pathsObject = this.requireJsPaths;
     var stream = new Stream.Transform({objectMode: true});
 
     stream._transform = function(file, unused, callback) {
@@ -70,6 +71,7 @@ function Utils() {
    * @returns {Object}
    */
   function getRequireJsConfigPaths() {
+    var that = this;
     var stream = new Stream.Transform({objectMode: true});
 
     stream._transform = function(file, unused, callback) {
@@ -92,7 +94,7 @@ function Utils() {
       file.contents = new Buffer(final);
 
       callback(null, file);
-      requireJsPaths = JSON.parse(final);
+      that.requireJsPaths = JSON.parse(final);
     };
 
     return stream;

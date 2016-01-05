@@ -1,5 +1,7 @@
 var del = require('del');
 var args = require('yargs').argv;
+var combine = require('stream-combiner');
+var requirejs = require('requirejs');
 var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('./utils');
 
@@ -19,6 +21,9 @@ function MvBuilder(gulp, config) {
     return gulp.src(__dirname + '/configs/.js*').pipe(gulp.dest(config.root));
   });
 
+  /**
+   * Starts JSHint analysis
+   */
   gulp.task('jshint', ['copy-rules'], function() {
     utils.log('Starting JSHint analysis');
     return gulp
@@ -28,6 +33,9 @@ function MvBuilder(gulp, config) {
       .pipe($.jshint.reporter('fail'));
   });
 
+  /**
+   * Starts jscs analysis
+   */
   gulp.task('jscs', ['copy-rules'], function() {
     utils.log('Starting JSCS analysis');
     return gulp
@@ -52,7 +60,9 @@ function MvBuilder(gulp, config) {
 
   /* BUILDING RELATED TASKS */
 
-  /* Usemin task - concats and minifies js and css which are in index.html */
+  /**
+   *  Usemin task - concats and minifies js and css which are in index.html
+   */
   gulp.task('useref', ['copy', 'requirejs'], function() {
     log('Optimizing the js, css, and html');
 
@@ -67,7 +77,7 @@ function MvBuilder(gulp, config) {
       // Get the css
       .pipe(cssFilter)
       .pipe($.csso())
-      .pipe($.autoprefixer(['last 1 version', '> 1%', 'ie 10', 'ie 9', 'ie 8', 'ie 7']))
+      .pipe($.autoprefixer(config.autoprefixerRules))
       .pipe($.bless())
       .pipe(cssFilter.restore)
       // Get the custom javascript
@@ -78,109 +88,137 @@ function MvBuilder(gulp, config) {
       .pipe(gulp.dest(config.temp));
   });
 
-  /* Copy task - copies all files which does not need any processing */
+  /**
+   * Copy task - copies all files which does not need any processing
+   */
   gulp.task('copy', ['copyDependencies'], function() {
+    var mainJs;
+
     /* Copy main */
     if(!args.concat) {
-      gulp.src('./app/scripts/main.js')
-        .pipe(gulp.dest('./.tmp/scripts'));
+      mainJs = gulp.src(config.mainJs)
+        .pipe(gulp.dest(config.temp + '/scripts'));
     }
 
     /* Copy views */
-    gulp.src('./app/views/**/*.html')
-      .pipe(minifyHTML({ empty: true, spare: true }))
-      .pipe(gulp.dest('.tmp/views/'));
+    var views = gulp.src(config.allViews)
+      .pipe($.htmlmin({ empty: true, spare: true }))
+      .pipe(gulp.dest(config.temp + '/views'));
 
     /* Copy favicon */
-    gulp.src('./app/favicon.ico')
-      .pipe(gulp.dest('.tmp/'));
+    var favicon = gulp.src(config.app + '/favicon.ico')
+      .pipe(gulp.dest(config.temp));
 
-    gulp.src('./app/.htaccess')
-      .pipe(gulp.dest('./dist/'));
+    /* Copy htaccess */
+    var htaccess = gulp.src(config.app + '/.htaccess')
+      .pipe(gulp.dest(config.dist));
 
     /* Copy translations */
-    copyFiles('./app/translations/*', '.tmp/translations');
+    var translations = gulp.src(config.app + 'translations/*')
+      .pipe(gulp.dest(config.temp + '/translations'));
+
+    /* Copy fonts */
+    var fonts = gulp.src(config.app + 'fonts/*')
+      .pipe(gulp.dest(config.temp + '/fonts'));
 
     /* Copy images */
-    return copyFiles(['./app/img/**/*'], '.tmp/img');
+    var images = gulp.src(config.allImages)
+      .pipe(gulp.dest(config.temp + '/img'));
+
+    return combine(mainJs, views, favicon, htaccess, translations, fonts, images);
   });
 
+  /**
+   * Copies fonts and images from dependencies to temp folder
+   */
   gulp.task('copyDependencies', function() {
-    /* Copy fonts */
-    copyFiles('./app/libs/visma-nc2/dist/fonts/*', '.tmp/fonts');
+    var fonts = gulp.src(config.dependenciesFonts)
+      .pipe(gulp.dest(config.temp + '/fonts'));
 
-    return copyFiles(['./app/libs/visma-nc2/dist/img/**/*'], '.tmp/img');
+    var images = gulp.src(config.dependenciesImages)
+      .pipe(gulp.dest(config.temp + '/img'));
+
+    return combine(fonts, images);
   });
 
-  /* Clean tasks - deletes dist, temp and config template folders */
+  /**
+   * Clean tasks - deletes dist, temp and config template folders
+   */
   gulp.task('clean', function() {
     return del([config.dist, config.temp, './configs/dist_template/*.js']);
   });
 
-  /* Clean temp tasks - deletes temp folder */
-  gulp.task('cleanTemp', ['requirejs', 'revision'], function() {
+  /**
+   * Clean temp tasks - deletes temp folder
+   */
+  gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function() {
     return del(config.temp);
   });
 
+  /**
+   * Copies config file if needed (when using template)
+   */
   gulp.task('setConfigFile', ['useref', 'replaceMain'], function() {
     var configUrl;
 
     if(args.template) {
-      configUrl = './configs/dist_template/config';
+      configUrl = config.root + 'configs/dist_template/config';
       return gulp.src([configUrl + '*.js'])
         .pipe(rename('config.js'))
-        .pipe(gulp.dest('./.tmp/scripts'));
+        .pipe(gulp.dest(config.temp + '/scripts'));
     }
   });
 
-  /* Requirejs task - reads main.js file and adds all libs to scrips folder */
+  /**
+   * Requirejs task - reads main.js file and adds all libs to scrips folder
+   */
   gulp.task('requirejs', ['copy'], function() {
     var configUrl, returnValue;
-    var revAll = new RevAll();
+    var revAll = new $.revAll();
 
     /* available params: --dev, --prod, --staging */
     if(args.development) {
-      configUrl = './configs/development/config';
+      configUrl = config.root + 'configs/development/config';
     } else if(args.template) {
-      configUrl = './configs/template/config';
+      configUrl = config.root + 'configs/template/config';
     } else {
-      configUrl = './app/scripts/config';
+      configUrl = config.root + 'app/scripts/config';
     }
 
     returnValue = combine(
-      gulp.src('./app/scripts/main.js'),
+      gulp.src(config.mainJs),
       utils.getRequireJsConfigPaths()
     )
       .on('end', function() {
-        var baseUrl = './app/scripts/',
-          destDir = './.tmp/scripts/',
-          libsPaths = requireJsPaths,
+        var baseUrl = config.app + '/scripts/',
+          destDir = config.temp + '/scripts/',
+          libsPaths = utils.requireJsPaths,
           lib;
 
         if(args.concat) {
 
           return requirejs.optimize({
-            baseUrl: './app/scripts',
+            baseUrl: baseUrl,
             paths: {
               'config': '../../' + configUrl
             },
-            dir: '.tmp/dist/scripts',
+            dir: destDir,
             uglify2: {
               mangle: false
             },
             almond: true,
             replaceRequireScript: [{
-              files: ['<%= yeoman.dist %>/index.html'],
+              files: [config.indexHtml],
               module: 'scripts/main'
             }],
 
             modules: [{name: 'main'}],
 
-            mainConfigFile: './app/scripts/main.js',
+            mainConfigFile: config.mainJs,
             useStrict: true,
             optimize: 'uglify2'
           }, function() {
-            return gulp.src('.tmp/dist/scripts/main.js')
+            return gulp.src(destDir + 'scripts/main.js')
               .pipe(gulp.dest(destDir));
           });
 
@@ -188,8 +226,8 @@ function MvBuilder(gulp, config) {
           for(lib in libsPaths) {
             if( libsPaths.hasOwnProperty(lib )) {
               gulp.src(baseUrl + libsPaths[lib] + '.js')
-                .pipe(rename(lib + '.js'))
-                .pipe(uglify({ mangle: false }))
+                .pipe($.rename(lib + '.js'))
+                .pipe($.uglify({ mangle: false }))
                 .pipe(gulp.dest(destDir));
             }
           }
@@ -201,26 +239,29 @@ function MvBuilder(gulp, config) {
       var configDest;
 
       if(args.template) {
-        configDest = 'configs/dist_template/';
+        configDest = config.root + '/configs/dist_template/';
       } else {
-        configDest = '.tmp/scripts/';
+        configDest = config.temp + 'scripts/';
       }
 
       gulp.src([configUrl + '.js'])
-        .pipe(uglify())
+        .pipe($.uglify())
         .pipe(utils.addTimestampComment())
         .pipe(revAll.revision())
         .pipe(gulp.dest(configDest));
 
-      return gulp.src(['./app/scripts/**/*.js', '!./app/scripts/main.js', '!./app/scripts/config.js'])
-        .pipe(uglify())
-        .pipe(gulp.dest('.tmp/scripts/'));
+      return gulp.src([config.allJs, '!' + config.mainJs, '!' + config.app + '/scripts/config.js'])
+        .pipe($.uglify())
+        .pipe(gulp.dest(config.temp + '.tmp/'));
 
     } else {
       return returnValue;
     }
   });
 
+  /**
+   * Revisions everything
+   */
   gulp.task('revision', ['useref', 'replaceMain', 'setConfigFile'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
@@ -235,11 +276,32 @@ function MvBuilder(gulp, config) {
       .pipe(gulp.dest(config.dist));
   });
 
+  /**
+   * Replaces lib paths in main.js file
+   */
   gulp.task('replaceMain', ['useref'], function() {
-    return gulp.src(['./.tmp/scripts/main.js'])
-      .pipe(utils.replaceRequireJsConfigPaths(requireJsPaths))
-      .pipe(uglify())
-      .pipe(gulp.dest('./.tmp/scripts'));
+    return gulp.src([config.temp + '/scripts/main.js'])
+      .pipe(utils.replaceRequireJsConfigPaths())
+      .pipe($.uglify())
+      .pipe(gulp.dest(config.temp + '/scripts'));
+  });
+
+  /**
+   * Fixes paths for resources from dependencies
+   */
+  gulp.task('fix-paths', ['useref'], function() {
+    return gulp.src(config.temp + '/styles/**/*')
+      .pipe($.replace('../../img', '../img'))
+      .pipe($.replace('../../fonts', '../fonts'))
+      .pipe(gulp.dest(config.temp + '/styles'));
+  });
+
+  /**
+   * Checks if there missing translation files
+   */
+  gulp.task('translations', function() {
+    return gulp.src(config.sniffForTranslations)
+      .pipe($.missingTranslations({ translationsSrc: config.translationFiles }));
   });
 
   gulp.task('build', ['requirejs', 'revision', 'cleanTemp']);
