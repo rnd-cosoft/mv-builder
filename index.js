@@ -1,3 +1,4 @@
+var del = require('del');
 var args = require('yargs').argv;
 var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('./utils');
@@ -111,10 +112,14 @@ function MvBuilder(gulp, config) {
     return copyFiles(['./app/libs/visma-nc2/dist/img/**/*'], '.tmp/img');
   });
 
+  /* Clean tasks - deletes dist, temp and config template folders */
+  gulp.task('clean', function() {
+    return del([config.dist, config.temp, './configs/dist_template/*.js']);
+  });
+
   /* Clean temp tasks - deletes temp folder */
   gulp.task('cleanTemp', ['requirejs', 'revision'], function() {
-    return gulp.src(['.tmp/'], {read: false})
-      .pipe(clean());
+    return del(config.temp);
   });
 
   gulp.task('setConfigFile', ['useref', 'replaceMain'], function() {
