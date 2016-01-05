@@ -115,11 +115,11 @@ function MvBuilder(gulp, config) {
       .pipe(gulp.dest(config.dist));
 
     /* Copy translations */
-    var translations = gulp.src(config.app + 'translations/*')
+    var translations = gulp.src(config.app + '/translations/*')
       .pipe(gulp.dest(config.temp + '/translations'));
 
     /* Copy fonts */
-    var fonts = gulp.src(config.app + 'fonts/*')
+    var fonts = gulp.src(config.app + '/fonts/*')
       .pipe(gulp.dest(config.temp + '/fonts'));
 
     /* Copy images */
@@ -148,7 +148,7 @@ function MvBuilder(gulp, config) {
   gulp.task('clean', function() {
     return gulp
       .src([config.dist, config.temp, './configs/dist_template/*.js'], { read: false })
-      .pipe(rimraf());
+      .pipe($.rimraf());
   });
 
   /**
@@ -157,7 +157,7 @@ function MvBuilder(gulp, config) {
   gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function() {
     return gulp
       .src(config.temp, { read: false })
-      .pipe(rimraf());
+      .pipe($.rimraf());
   });
 
   /**
@@ -246,7 +246,7 @@ function MvBuilder(gulp, config) {
       if(args.template) {
         configDest = config.root + '/configs/dist_template/';
       } else {
-        configDest = config.temp + 'scripts/';
+        configDest = config.temp + '/scripts/';
       }
 
       gulp.src([configUrl + '.js'])
@@ -257,7 +257,7 @@ function MvBuilder(gulp, config) {
 
       return gulp.src([config.allJs, '!' + config.mainJs, '!' + config.app + '/scripts/config.js'])
         .pipe($.uglify())
-        .pipe(gulp.dest(config.temp));
+        .pipe(gulp.dest(config.temp + '/scripts'));
 
     } else {
       return returnValue;
@@ -267,7 +267,7 @@ function MvBuilder(gulp, config) {
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['useref', 'replaceMain', 'setConfigFile'], function() {
+  gulp.task('revision', ['useref', 'fix-paths', 'replaceMain', 'setConfigFile'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
