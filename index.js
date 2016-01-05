@@ -312,7 +312,7 @@ function MvBuilder(gulp, config) {
    * Cleans less and sass files
    **/
   gulp.task('clean-styles', function () {
-    utils.log('Cleaning: ' + files);
+    utils.log('Cleaning styles');
     return gulp.src([config.sassDest + '/**/*', config.lessDest + '/**/*'], {read: false})
       .pipe($.rimraf());
   });
