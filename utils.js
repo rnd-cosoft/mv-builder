@@ -1,4 +1,5 @@
 var $ = require('gulp-load-plugins')({lazy: true});
+var Stream = require('stream');
 var colors = $.util.colors;
 
 function Utils() {
