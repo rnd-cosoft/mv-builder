@@ -1,6 +1,7 @@
 var del = require('del');
 var args = require('yargs').argv;
 var combine = require('stream-combiner');
+var merge = require('merge-stream');
 var requirejs = require('requirejs');
 var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('./utils');
@@ -64,7 +65,7 @@ function MvBuilder(gulp, config) {
    *  Usemin task - concats and minifies js and css which are in index.html
    */
   gulp.task('useref', ['copy', 'requirejs'], function() {
-    log('Optimizing the js, css, and html');
+    utils.log('Optimizing the js, css, and html');
 
     // Filters are named for the gulp-useref path
     var cssFilter = $.filter('**/*.css', {restore: true});
@@ -125,7 +126,7 @@ function MvBuilder(gulp, config) {
     var images = gulp.src(config.allImages)
       .pipe(gulp.dest(config.temp + '/img'));
 
-    return combine(mainJs, views, favicon, htaccess, translations, fonts, images);
+    return merge(mainJs, views, favicon, htaccess, translations, fonts, images);
   });
 
   /**
@@ -138,7 +139,7 @@ function MvBuilder(gulp, config) {
     var images = gulp.src(config.dependenciesImages)
       .pipe(gulp.dest(config.temp + '/img'));
 
-    return combine(fonts, images);
+    return merge(fonts, images);
   });
 
   /**
@@ -256,7 +257,7 @@ function MvBuilder(gulp, config) {
 
       return gulp.src([config.allJs, '!' + config.mainJs, '!' + config.app + '/scripts/config.js'])
         .pipe($.uglify())
-        .pipe(gulp.dest(config.temp + '.tmp/'));
+        .pipe(gulp.dest(config.temp));
 
     } else {
       return returnValue;

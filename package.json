@@ -36,6 +36,7 @@
     "karma-ng-scenario": "^0.1.0",
     "karma-phantomjs-launcher": "^0.1.4",
     "karma-requirejs": "^0.2.2",
+    "merge-stream": "^1.0.0",
     "phantomjs": "^1.9.17",
     "requirejs": "^2.1.22",
     "stream": "0.0.2",
