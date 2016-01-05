@@ -1,3 +1,4 @@
+var del = require('del');
 var args = require('yargs').argv;
 var combine = require('stream-combiner');
 var merge = require('merge-stream');
@@ -144,19 +145,15 @@ function MvBuilder(gulp, config) {
   /**
    * Clean tasks - deletes dist, temp and config template folders
    */
-  gulp.task('clean', function() {
-    return gulp
-      .src([config.dist, config.temp, './configs/dist_template/*.js'], { read: false })
-      .pipe($.rimraf());
+  gulp.task('clean', function(done) {
+    del([config.dist, config.temp, './configs/dist_template/*.js'], done);
   });
 
   /**
    * Clean temp tasks - deletes temp folder
    */
-  gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function() {
-    return gulp
-      .src(config.temp, { read: false })
-      .pipe($.rimraf());
+  gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function(done) {
+    del(config.temp, done);
   });
 
   /**
@@ -311,10 +308,9 @@ function MvBuilder(gulp, config) {
   /**
    * Cleans less and sass files
    **/
-  gulp.task('clean-styles', function () {
+  gulp.task('clean-styles', function (done) {
     utils.log('Cleaning styles');
-    return gulp.src([config.sassDest + '/**/*', config.lessDest + '/**/*'], {read: false})
-      .pipe($.rimraf());
+    del([config.sassDest + '/**/*', config.lessDest + '/**/*'], done);
   });
 
   /**

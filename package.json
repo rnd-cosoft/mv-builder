@@ -7,6 +7,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "del": "^2.2.0",
     "gulp-autoprefixer": "^3.1.0",
     "gulp-bless": "^3.0.1",
     "gulp-csso": "^1.0.1",
@@ -22,7 +23,6 @@
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
     "gulp-rev-all": "^0.8.22",
-    "gulp-rimraf": "^0.2.0",
     "gulp-sass": "^2.1.1",
     "gulp-task-listing": "^1.0.1",
     "gulp-uglify": "^1.5.1",
