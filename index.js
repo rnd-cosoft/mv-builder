@@ -145,14 +145,14 @@ function MvBuilder(gulp, config) {
    * Clean tasks - deletes dist, temp and config template folders
    */
   gulp.task('clean', function() {
-    return del([config.dist, config.temp, './configs/dist_template/*.js']);
+    return del([config.dist, config.temp, './configs/dist_template/*.js'], { read: false });
   });
 
   /**
    * Clean temp tasks - deletes temp folder
    */
   gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function() {
-    return del(config.temp);
+    return del(config.temp, { read: false });
   });
 
   /**
