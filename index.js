@@ -5,6 +5,7 @@ var merge = require('merge-stream');
 var requirejs = require('requirejs');
 var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('./utils');
+var Server = require('karma').Server;
 
 function MvBuilder(gulp, config) {
 
@@ -362,6 +363,14 @@ function MvBuilder(gulp, config) {
    */
   gulp.task('watch-less', function(){
     gulp.watch([config.lessSrc], ['compile-less']);
+  });
+
+  /* Karma task - starts unit tests */
+  gulp.task('karma', function(done) {
+    new Server({
+      configFile: config.root + 'karma.conf.js',
+      singleRun: true
+    }, done).start();
   });
 }
 
