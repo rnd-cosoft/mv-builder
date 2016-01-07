@@ -311,7 +311,7 @@ function MvBuilder(gulp, config) {
    **/
   gulp.task('clean-styles-sass', function (done) {
     utils.log('Cleaning SASS styles');
-    del(config.sassDest + '/**/*', done);
+    return del(config.sassDest + '/**/*', done);
   });
 
   /**
@@ -342,7 +342,7 @@ function MvBuilder(gulp, config) {
    **/
   gulp.task('clean-styles-less', function (done) {
     utils.log('Cleaning LESS styles');
-    del([config.lessDest + '/**/*'], done);
+    return del([config.lessDest + '/**/*'], done);
   });
 
   /**
