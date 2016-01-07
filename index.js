@@ -307,17 +307,17 @@ function MvBuilder(gulp, config) {
   });
 
   /**
-   * Cleans less and sass files
+   * Cleans sass files
    **/
-  gulp.task('clean-styles', function (done) {
-    utils.log('Cleaning styles');
-    del([config.sassDest + '/**/*', config.lessDest + '/**/*'], done);
+  gulp.task('clean-styles-sass', function (done) {
+    utils.log('Cleaning SASS styles');
+    del(config.sassDest + '/**/*', done);
   });
 
   /**
    * Compiles SASS source files to css files
    */
-  gulp.task('compile-sass', ['clean-styles'], function () {
+  gulp.task('compile-sass', ['clean-styles-sass'], function () {
     utils.log('Compiling SASS --> CSS');
 
     return gulp
@@ -338,9 +338,17 @@ function MvBuilder(gulp, config) {
   });
 
   /**
+   * Cleans less files
+   **/
+  gulp.task('clean-styles-less', function (done) {
+    utils.log('Cleaning LESS styles');
+    del([config.lessDest + '/**/*'], done);
+  });
+
+  /**
    * Compiles LESS source files to css files
    */
-  gulp.task('compile-less', ['clean-styles'], function () {
+  gulp.task('compile-less', ['clean-styles-less'], function () {
     var filter = $.filter(utils.isNotPrivate);
     utils.log('Compiling LESS --> CSS');
 
