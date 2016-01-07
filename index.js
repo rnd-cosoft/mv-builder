@@ -375,10 +375,17 @@ function MvBuilder(gulp, config) {
 
   /* Karma task - starts unit tests */
   gulp.task('karma', function(done) {
-    new Server({
+    var server = new Server({
       configFile: config.root + 'karma.conf.js',
       singleRun: true
-    }, done).start();
+    });
+
+    server.on('run_complete', function (browsers, results) {
+      // NB If the argument of done() is not null or not undefined, e.g. a string, the next task in a series won't run.
+      done(results.error ? 'There are test failures' : null);
+    });
+
+    server.start();
   });
 }
 
