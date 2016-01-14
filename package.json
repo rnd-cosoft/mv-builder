@@ -1,11 +1,11 @@
 {
   "name": "mv-builder",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Builder module for myvisma projects",
   "repository": "https://github.com/domakas/mv-builder.git",
   "main": "index.js",
-  "author": "",
-  "license": "ISC",
+  "author": "Domas Maksimas <domas.maksimas@visma.com>",
+  "license": "MIT",
   "dependencies": {
     "del": "^2.2.0",
     "gulp-autoprefixer": "^3.1.0",
