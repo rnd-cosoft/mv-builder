@@ -15,7 +15,10 @@ function MvBuilder(gulp, config) {
   gulp.task('help', $.taskListing);
   gulp.task('default', ['help']);
   gulp.task('vet', ['jshint', 'jscs']);
-  gulp.task('build', ['requirejs', 'revision', 'cleanTemp']);
+  gulp.task('build', ['requirejs', 'revision'], function(done) {
+    // Just clean up temp folder after everything is done
+    return del(config.temp, done);
+  });
 
   /**
    * Updates project rules configuration files
@@ -65,102 +68,96 @@ function MvBuilder(gulp, config) {
   /**
    *  Usemin task - concats and minifies js and css which are in index.html
    */
-  gulp.task('useref', ['copy', 'requirejs'], function() {
-    utils.log('Optimizing the js, css, and html');
-
-    // Filters are named for the gulp-useref path
-    var cssFilter = $.filter('**/*.css', {restore: true});
-    var jsFilter = $.filter('**/*.js', {restore: true});
-
-    return gulp
-      .src(config.indexHtml)
-      .pipe($.plumber())
-      .pipe($.useref()) // Gather all assets from the html with useref
-      // Get the css
-      .pipe(cssFilter)
-      .pipe($.csso())
-      .pipe($.autoprefixer(config.autoprefixerRules))
-      .pipe($.bless())
-      .pipe(cssFilter.restore)
-      // Get the custom javascript
-      .pipe(jsFilter)
-      .pipe($.uglify())
-      .pipe(jsFilter.restore)
-      // Take inventory of the file names for future rev numbers
+  gulp.task('usemin', ['copy', 'requirejs'], function() {
+    return gulp.src(config.indexHtml)
+      .pipe($.usemin({
+        css: [csso, autoprefixer, bless],
+        js: [uglify]
+      }))
       .pipe(gulp.dest(config.temp));
+
+    function csso() {
+      return $.csso();
+    }
+
+    function autoprefixer() {
+      return $.autoprefixer(config.autoprefixerRules);
+    }
+
+    function bless() {
+      return $.bless();
+    }
+
+    function uglify() {
+      return $.uglify();
+    }
   });
 
   /**
    * Copy task - copies all files which does not need any processing
    */
-  gulp.task('copy', ['copyDependencies'], function() {
-    var mainJs;
+  gulp.task('copy', ['clean', 'copyDependencies'], function() {
+    var stream = merge();
 
     /* Copy main */
     if(!args.concat) {
-      mainJs = gulp.src(config.mainJs)
-        .pipe(gulp.dest(config.temp + '/scripts'));
+      stream.add(gulp.src(config.mainJs)
+        .pipe(gulp.dest(config.temp + '/scripts')));
     }
 
     /* Copy views */
-    var views = gulp.src(config.allViews)
+    stream.add(gulp.src(config.allViews)
       .pipe($.htmlmin({ empty: true, spare: true }))
-      .pipe(gulp.dest(config.temp + '/views'));
+      .pipe(gulp.dest(config.temp + '/views')));
 
     /* Copy favicon */
-    var favicon = gulp.src(config.app + '/favicon.ico')
-      .pipe(gulp.dest(config.temp));
+    stream.add(gulp.src(config.app + '/favicon.ico')
+      .pipe(gulp.dest(config.temp)));
 
     /* Copy htaccess */
-    var htaccess = gulp.src(config.app + '/.htaccess')
-      .pipe(gulp.dest(config.dist));
+    stream.add(gulp.src(config.app + '/.htaccess')
+      .pipe(gulp.dest(config.dist)));
 
     /* Copy translations */
-    var translations = gulp.src(config.app + '/translations/*')
-      .pipe(gulp.dest(config.temp + '/translations'));
+    stream.add(gulp.src(config.app + '/translations/*')
+      .pipe(gulp.dest(config.temp + '/translations')));
 
     /* Copy fonts */
-    var fonts = gulp.src(config.app + '/fonts/*')
-      .pipe(gulp.dest(config.temp + '/fonts'));
+    stream.add(gulp.src(config.app + '/fonts/*')
+      .pipe(gulp.dest(config.temp + '/fonts')));
 
     /* Copy images */
-    var images = gulp.src(config.allImages)
-      .pipe(gulp.dest(config.temp + '/img'));
+    stream.add(gulp.src(config.allImages)
+      .pipe(gulp.dest(config.temp + '/img')));
 
-    return merge(mainJs, views, favicon, htaccess, translations, fonts, images);
+    return stream;
   });
 
   /**
    * Copies fonts and images from dependencies to temp folder
    */
-  gulp.task('copyDependencies', function() {
-    var fonts = gulp.src(config.dependenciesFonts)
-      .pipe(gulp.dest(config.temp + '/fonts'));
+  gulp.task('copyDependencies', ['clean'], function() {
+    var stream = merge();
+    stream.add(gulp.src(config.dependenciesFonts)
+      .pipe(gulp.dest(config.temp + '/fonts')));
 
-    var images = gulp.src(config.dependenciesImages)
-      .pipe(gulp.dest(config.temp + '/img'));
+    stream.add(gulp.src(config.dependenciesImages)
+      .pipe(gulp.dest(config.temp + '/img')));
 
-    return merge(fonts, images);
+    return stream;
   });
 
   /**
    * Clean tasks - deletes dist, temp and config template folders
    */
   gulp.task('clean', function(done) {
-    del([config.dist, config.temp, './configs/dist_template/*.js'], done);
-  });
-
-  /**
-   * Clean temp tasks - deletes temp folder
-   */
-  gulp.task('cleanTemp', ['clean', 'requirejs', 'revision'], function(done) {
-    del(config.temp, done);
+    return del([config.dist, config.temp, './configs/dist_template/*.js'], done);
   });
 
   /**
    * Copies config file if needed (when using template)
    */
-  gulp.task('setConfigFile', ['useref', 'replaceMain'], function() {
+  gulp.task('setConfigFile', ['usemin', 'replaceMain'], function() {
     var configUrl;
 
     if(args.template) {
@@ -264,7 +261,7 @@ function MvBuilder(gulp, config) {
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['useref', 'fix-paths', 'replaceMain', 'setConfigFile'], function() {
+  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'setConfigFile'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
@@ -281,7 +278,7 @@ function MvBuilder(gulp, config) {
   /**
    * Replaces lib paths in main.js file
    */
-  gulp.task('replaceMain', ['useref'], function() {
+  gulp.task('replaceMain', ['usemin'], function() {
     return gulp.src([config.temp + '/scripts/main.js'])
       .pipe(utils.replaceRequireJsConfigPaths())
       .pipe($.uglify())
@@ -291,7 +288,7 @@ function MvBuilder(gulp, config) {
   /**
    * Fixes paths for resources from dependencies
    */
-  gulp.task('fix-paths', ['useref'], function() {
+  gulp.task('fix-paths', ['usemin'], function() {
     return gulp.src(config.temp + '/styles/**/*')
       .pipe($.replace('../../img', '../img'))
       .pipe($.replace('../../fonts', '../fonts'))
