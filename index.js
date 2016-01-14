@@ -52,17 +52,6 @@ function MvBuilder(gulp, config) {
       .pipe($.jscs.reporter('fail'));
   });
 
-  /**
-   *  Karma task - starts unit tests
-   */
-  gulp.task('karma', function() {
-    return gulp.src(['no need to supply files because everything is in config file'])
-      .pipe($.karma({
-        configFile: config.karmaConfig,
-        singleRun: true
-      }));
-  });
-
   /* BUILDING RELATED TASKS */
 
   /**
