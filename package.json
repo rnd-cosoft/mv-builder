@@ -1,6 +1,6 @@
 {
   "name": "mv-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Builder module for myvisma projects",
   "repository": "https://github.com/domakas/mv-builder.git",
   "main": "index.js",
@@ -25,7 +25,7 @@
     "gulp-sass": "^2.1.1",
     "gulp-task-listing": "^1.0.1",
     "gulp-uglify": "^1.5.1",
-    "gulp-usemin": "git+https://github.com/domakas/gulp-usemin.git",
+    "gulp-usemin": "^0.3.20",
     "gulp-util": "^3.0.6",
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
