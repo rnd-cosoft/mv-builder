@@ -1,6 +1,6 @@
 {
   "name": "mv-builder",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Builder module for myvisma projects",
   "repository": "https://github.com/domakas/mv-builder.git",
   "main": "index.js",
