@@ -1,3 +1,7 @@
+### 0.2.1 (2016-02-01)
+
+* Added optional `config.allViewsDest` value for copying views to specific location;
+
 ### 0.2.0 (2016-01-26)
 
 #### Breaking changes

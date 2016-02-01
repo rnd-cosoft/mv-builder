@@ -86,6 +86,7 @@ function MvBuilder(gulp, config) {
    * Copy task - copies all files which does not need any processing
    */
   gulp.task('copy', ['clean', 'copyDependencies'], function() {
+    var viewsLocation = config.allViewsDest || config.temp + '/views';
     var stream = merge();
 
     /* Copy main */
@@ -97,7 +98,7 @@ function MvBuilder(gulp, config) {
     /* Copy views */
     stream.add(gulp.src(config.allViews)
       .pipe($.htmlmin({ empty: true, spare: true }))
-      .pipe(gulp.dest(config.temp + '/views')));
+      .pipe(gulp.dest(viewsLocation)));
 
     /* Copy favicon */
     stream.add(gulp.src(config.app + '/favicon.ico')

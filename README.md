@@ -39,6 +39,7 @@ module.exports = function () {
 
     allJs: root + 'app/scripts/**/*.js', // Location of all JS files
     allViews: root + 'app/views/**/*.html', // Location of all views
+    allViewsDest: this.temp + '/scripts' // Optional: Location for copying views files
     allImages: root + 'app/img/**/*', // Location of all images
 
     dependenciesFonts: root + 'app/libs/visma-nc3/dist/fonts/*', // Location of depending fonts
