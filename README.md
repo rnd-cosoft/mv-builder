@@ -65,7 +65,8 @@ gulp.js
 
 var gulp = require('gulp'),
   config = require('./gulp.config')(),
-  mvBuilder = require('mv-builder')(gulp, config);
+  buildConfig = require('./build.config')(),
+  mvBuilder = require('mv-builder')(gulp, config, buildConfig);
 ```
 
 Available task
