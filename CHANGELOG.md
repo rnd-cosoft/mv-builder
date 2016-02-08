@@ -1,3 +1,9 @@
+### 0.3.0 (2016-02-08)
+
+* Implemented requirejs bundling support, this will work only with modular architecture and proper r.js build config 
+
+#### Breaking changes
+
 ### 0.2.1 (2016-02-01)
 
 * Added optional `config.allViewsDest` value for copying views to specific location;

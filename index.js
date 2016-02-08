@@ -7,7 +7,7 @@ var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('./utils');
 var Server = require('karma').Server;
 
-function MvBuilder(gulp, config) {
+function MvBuilder(gulp, config, buildConfig) {
 
   /**
    * List the available gulp tasks
@@ -15,7 +15,7 @@ function MvBuilder(gulp, config) {
   gulp.task('help', $.taskListing);
   gulp.task('default', ['help']);
   gulp.task('vet', ['jshint', 'jscs']);
-  gulp.task('build', ['requirejs', 'revision'], function(done) {
+  gulp.task('build', ['copyEverythingToTemp', 'revision'], function(done) {
     // Just clean up temp folder after everything is done
     return del(config.temp, done);
   });
@@ -57,7 +57,7 @@ function MvBuilder(gulp, config) {
   /**
    *  Usemin task - concats and minifies js and css which are in index.html
    */
-  gulp.task('usemin', ['copy', 'requirejs'], function() {
+  gulp.task('usemin', ['copyEverythingToTemp'], function() {
     return gulp.src(config.indexHtml)
       .pipe($.usemin({
         css: [csso, autoprefixer, bless],
@@ -85,15 +85,9 @@ function MvBuilder(gulp, config) {
   /**
    * Copy task - copies all files which does not need any processing
    */
-  gulp.task('copy', ['clean', 'copyDependencies'], function() {
-    var viewsLocation = config.allViewsDest || config.temp + '/views';
+  gulp.task('copyResourcesToTemp', ['clean', 'copyDependencies'], function() {
+    var viewsLocation = config.allViewsDest || config.tempScripts;
     var stream = merge();
-
-    /* Copy main */
-    if(!args.concat) {
-      stream.add(gulp.src(config.mainJs)
-        .pipe(gulp.dest(config.temp + '/scripts')));
-    }
 
     /* Copy views */
     stream.add(gulp.src(config.allViews)
@@ -123,19 +117,19 @@ function MvBuilder(gulp, config) {
     return stream;
   });
 
-  /**
-   * Copies fonts and images from dependencies to temp folder
-   */
-  gulp.task('copyDependencies', ['clean'], function() {
-    var stream = merge();
-    stream.add(gulp.src(config.dependenciesFonts)
-      .pipe(gulp.dest(config.temp + '/fonts')));
+    /**
+     * Copies fonts and images from dependencies to temp folder
+     */
+    gulp.task('copyDependencies', ['clean'], function() {
+      var stream = merge();
+      stream.add(gulp.src(config.dependenciesFonts)
+        .pipe(gulp.dest(config.temp + '/fonts')));
 
-    stream.add(gulp.src(config.dependenciesImages)
-      .pipe(gulp.dest(config.temp + '/img')));
+      stream.add(gulp.src(config.dependenciesImages)
+        .pipe(gulp.dest(config.temp + '/img')));
 
-    return stream;
-  });
+      return stream;
+    });
 
   /**
    * Clean tasks - deletes dist, temp and config template folders
@@ -154,15 +148,40 @@ function MvBuilder(gulp, config) {
       configUrl = config.root + 'configs/dist_template/config';
       return gulp.src([configUrl + '*.js'])
         .pipe($.rename('config.js'))
-        .pipe(gulp.dest(config.temp + '/scripts'));
+        .pipe(gulp.dest(config.tempScripts));
     }
   });
 
+  gulp.task('copyEverythingToTemp', ['copyResourcesToTemp', 'copyConfigToTemp', 'copyLibsToTemp', 'removeRjsTemp']);
+
+  gulp.task('copyLibsToTemp', ['uglifyScriptsInTemp'], function() {
+    return combine(
+      gulp.src(config.mainJs),
+      utils.getRequireJsConfigPaths()
+    )
+      .on('end', function() {
+        var baseUrl = config.app + '/scripts/',
+          destDir = config.temp + '/scripts/libs/',
+          libsPaths = utils.requireJsPaths,
+          lib;
+
+          for(lib in libsPaths) {
+            if (libsPaths.hasOwnProperty(lib)) {
+              gulp.src(baseUrl + libsPaths[lib] + '.js')
+                .pipe($.rename(lib + '.js'))
+                .pipe($.uglify({ mangle: false }))
+                .pipe(gulp.dest(destDir));
+            }
+          }
+
+      });
+  });
+
   /**
-   * Requirejs task - reads main.js file and adds all libs to scrips folder
+   * Copies config file to temp dir
    */
-  gulp.task('requirejs', ['copy'], function() {
-    var configUrl, returnValue;
+  gulp.task('copyConfigToTemp', ['copyStandaloneFilesToTemp'], function() {
+    var configUrl;
     var revAll = new $.revAll();
 
     /* available params: --dev, --prod, --staging */
@@ -174,84 +193,24 @@ function MvBuilder(gulp, config) {
       configUrl = config.root + 'app/scripts/config';
     }
 
-    returnValue = combine(
-      gulp.src(config.mainJs),
-      utils.getRequireJsConfigPaths()
-    )
-      .on('end', function() {
-        var baseUrl = config.app + '/scripts/',
-          destDir = config.temp + '/scripts/',
-          libsPaths = utils.requireJsPaths,
-          lib;
+    var configDest;
 
-        if(args.concat) {
-
-          return requirejs.optimize({
-            baseUrl: baseUrl,
-            paths: {
-              'config': '../../' + configUrl
-            },
-            dir: destDir,
-            uglify2: {
-              mangle: false
-            },
-            almond: true,
-            replaceRequireScript: [{
-              files: [config.indexHtml],
-              module: 'scripts/main'
-            }],
-
-            modules: [{name: 'main'}],
-
-            mainConfigFile: config.mainJs,
-            useStrict: true,
-            optimize: 'uglify2'
-          }, function() {
-            return gulp.src(destDir + 'scripts/main.js')
-              .pipe(gulp.dest(destDir));
-          });
-
-        } else {
-          for(lib in libsPaths) {
-            if( libsPaths.hasOwnProperty(lib )) {
-              gulp.src(baseUrl + libsPaths[lib] + '.js')
-                .pipe($.rename(lib + '.js'))
-                .pipe($.uglify({ mangle: false }))
-                .pipe(gulp.dest(destDir));
-            }
-          }
-        }
-      });
-
-    /* Copy JS */
-    if(!args.concat) {
-      var configDest;
-
-      if(args.template) {
-        configDest = config.root + '/configs/dist_template/';
-      } else {
-        configDest = config.temp + '/scripts/';
-      }
-
-      gulp.src([configUrl + '.js'])
-        .pipe($.uglify())
-        .pipe(utils.addTimestampComment())
-        .pipe(revAll.revision())
-        .pipe(gulp.dest(configDest));
-
-      return gulp.src([config.allJs, '!' + config.mainJs, '!' + config.app + '/scripts/config.js'])
-        .pipe($.uglify())
-        .pipe(gulp.dest(config.temp + '/scripts'));
-
+    if (args.template) {
+      configDest = config.root + '/configs/dist_template/';
     } else {
-      return returnValue;
+      configDest = config.tempScripts;
     }
+
+    return gulp.src([configUrl + '.js'])
+      .pipe($.uglify())
+      .pipe(utils.addTimestampComment())
+      .pipe(gulp.dest(configDest));
   });
 
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'setConfigFile'], function() {
+  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'setConfigFile', 'enableBundles'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
@@ -269,10 +228,10 @@ function MvBuilder(gulp, config) {
    * Replaces lib paths in main.js file
    */
   gulp.task('replaceMain', ['usemin'], function() {
-    return gulp.src([config.temp + '/scripts/main.js'])
+    return gulp.src([config.tempScripts + '/main.js'])
       .pipe(utils.replaceRequireJsConfigPaths())
       .pipe($.uglify())
-      .pipe(gulp.dest(config.temp + '/scripts'));
+      .pipe(gulp.dest(config.tempScripts));
   });
 
   /**
@@ -374,6 +333,77 @@ function MvBuilder(gulp, config) {
 
     server.start();
   });
+
+  gulp.task('removeRjsTemp', ['copyStandaloneFilesToTemp', 'copyBundlesToTemp'], function(done) {
+    return del([config.rjsTemp], done);
+  });
+
+  /**
+   * Bundles js files using standard r.js configuration, outputs to buildConfig.dir
+   */
+  gulp.task('rjs-compile', function(cb) {
+    requirejs.optimize(buildConfig, function(buildResponse) {
+      console.log(buildResponse);
+      cb();
+    }, function(err) {
+      cb(err);
+    });
+  });
+
+  gulp.task('copyStandaloneFilesToTemp', ['rjs-compile', 'clean'], function() {
+    var standaloneFiles = [];
+
+    buildConfig.custom.standaloneFiles.forEach(function(file) {
+      standaloneFiles.push(config.rjsTemp + '/**/' + file + '.js');
+    });
+
+    return gulp.src(standaloneFiles)
+      .pipe(gulp.dest(config.tempScripts));
+  });
+
+  gulp.task('copyBundlesToTemp', ['rjs-compile', 'clean'], function() {
+    var bundleFiles = [];
+
+    // parse bundle files from modules config
+    buildConfig.modules.forEach(function(module) {
+      var filePath = config.rjsTemp + '/**/' + module.name + '.js';
+      bundleFiles.push(filePath);
+    });
+
+    return gulp.src(bundleFiles)
+      .pipe($.rename(function(path) {
+        var basename = path.dirname.replace(/\//g, '-');
+        if (!basename || basename.length < 2) {
+          basename = path.basename;
+        }
+        path.basename = basename + '.bundle';
+        path.dirname = '';
+      }))
+      .pipe(gulp.dest(config.tempScripts));
+  });
+
+  /**
+   * Enables bundle config in main.js
+   */
+  gulp.task('enableBundles', ['copyStandaloneFilesToTemp'], function() {
+    var mainjs = config.tempScripts + '/main.js';
+
+    return gulp.src(mainjs)
+      .pipe($.replace('_replaceKeyOnBuild', ''))
+      .pipe(gulp.dest(config.tempScripts));
+  });
+
+  gulp.task('uglifyScriptsInTemp', ['copyStandaloneFilesToTemp', 'copyBundlesToTemp'], function() {
+    var omitFiles = [
+      '!' + config.tempScripts + '/main.js',
+      '!' + config.tempScripts + '/config.js'
+    ];
+
+    return gulp.src([config.tempScripts + '/**/*.js'].concat(omitFiles))
+      .pipe($.uglify())
+      .pipe(gulp.dest(config.tempScripts));
+  });
+
 }
 
 module.exports = MvBuilder;

@@ -45,7 +45,7 @@ function Utils() {
       var temp, splitTwo;
 
       for(var key in pathsObject) {
-        pathsObject[key] = './' + key;
+        pathsObject[key] = './libs/' + key;
       }
 
       for(var i = 0; i < split.length; i++) {
