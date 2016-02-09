@@ -15,7 +15,7 @@ function MvBuilder(gulp, config, buildConfig) {
   gulp.task('help', $.taskListing);
   gulp.task('default', ['help']);
   gulp.task('vet', ['jshint', 'jscs']);
-  gulp.task('build', ['copyEverythingToTemp', 'revision'], function(done) {
+  gulp.task('build', ['copyEverythingToTemp', 'revision', 'copyConfigToTemplates'], function(done) {
     // Just clean up temp folder after everything is done
     return del(config.temp, done);
   });
@@ -83,6 +83,15 @@ function MvBuilder(gulp, config, buildConfig) {
   });
 
   /**
+   * Clean tasks - deletes dist, temp and config template folders
+   */
+  gulp.task('clean', function(done) {
+    return del([config.dist, config.temp, './configs/dist_template/*.js'], done);
+  });
+
+  gulp.task('copyEverythingToTemp', ['copyResourcesToTemp', 'copyConfigToTemp', 'copyLibsToTemp', 'removeRjsTemp']);
+
+  /**
    * Copy task - copies all files which does not need any processing
    */
   gulp.task('copyResourcesToTemp', ['clean', 'copyDependencies'], function() {
@@ -131,29 +140,6 @@ function MvBuilder(gulp, config, buildConfig) {
       return stream;
     });
 
-  /**
-   * Clean tasks - deletes dist, temp and config template folders
-   */
-  gulp.task('clean', function(done) {
-    return del([config.dist, config.temp, './configs/dist_template/*.js'], done);
-  });
-
-  /**
-   * Copies config file if needed (when using template)
-   */
-  gulp.task('setConfigFile', ['usemin', 'replaceMain'], function() {
-    var configUrl;
-
-    if(args.template) {
-      configUrl = config.root + 'configs/dist_template/config';
-      return gulp.src([configUrl + '*.js'])
-        .pipe($.rename('config.js'))
-        .pipe(gulp.dest(config.tempScripts));
-    }
-  });
-
-  gulp.task('copyEverythingToTemp', ['copyResourcesToTemp', 'copyConfigToTemp', 'copyLibsToTemp', 'removeRjsTemp']);
-
   gulp.task('copyLibsToTemp', ['uglifyScriptsInTemp'], function() {
     return combine(
       gulp.src(config.mainJs),
@@ -178,39 +164,43 @@ function MvBuilder(gulp, config, buildConfig) {
   });
 
   /**
-   * Copies config file to temp dir
+   * Copies config file or its template to temp dir
    */
   gulp.task('copyConfigToTemp', ['copyStandaloneFilesToTemp'], function() {
     var configUrl;
     var revAll = new $.revAll();
 
-    /* available params: --dev, --prod, --staging */
-    if(args.development) {
-      configUrl = config.root + 'configs/development/config';
-    } else if(args.template) {
+    if (args.template) {
       configUrl = config.root + 'configs/template/config';
     } else {
       configUrl = config.root + 'app/scripts/config';
     }
 
-    var configDest;
-
-    if (args.template) {
-      configDest = config.root + '/configs/dist_template/';
-    } else {
-      configDest = config.tempScripts;
-    }
-
     return gulp.src([configUrl + '.js'])
       .pipe($.uglify())
       .pipe(utils.addTimestampComment())
-      .pipe(gulp.dest(configDest));
+      .pipe(gulp.dest(config.tempScripts));
+  });
+
+  /**
+   * Copies config file to templates folder for --template builds (it will be populated with data from CI and copied to dist)
+   */
+  gulp.task('copyConfigToTemplates', ['revision'], function() {
+    if (!args.template) {
+      return;
+    }
+
+    var configUrl = config.dist + '/scripts/config.*.js';
+    var templatesUrl = config.root + 'configs/dist_template/';
+
+    return gulp.src([configUrl])
+      .pipe(gulp.dest(templatesUrl));
   });
 
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'setConfigFile', 'enableBundles'], function() {
+  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'enableBundles'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
