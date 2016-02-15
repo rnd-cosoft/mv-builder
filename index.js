@@ -55,9 +55,9 @@ function MvBuilder(gulp, config, buildConfig) {
   /* BUILDING RELATED TASKS */
 
   /**
-   *  Usemin task - concats and minifies js and css which are in index.html
+   *  combineResourcesInIndex task - concats and minifies js and css which are in index.html
    */
-  gulp.task('usemin', ['copyEverythingToTemp'], function() {
+  gulp.task('combineResourcesInIndex', ['copyEverythingToTemp'], function() {
     return gulp.src(config.indexHtml)
       .pipe($.usemin({
         css: [csso, autoprefixer, bless],
@@ -89,7 +89,7 @@ function MvBuilder(gulp, config, buildConfig) {
     return del([config.dist, config.temp, './configs/dist_template/*.js'], done);
   });
 
-  gulp.task('copyEverythingToTemp', ['copyResourcesToTemp', 'copyConfigToTemp', 'copyLibsToTemp', 'removeRjsTemp']);
+  gulp.task('copyEverythingToTemp', ['copyResourcesToTemp', 'copyConfigToTemp', 'removeRjsTemp']);
 
   /**
    * Copy task - copies all files which does not need any processing
@@ -140,35 +140,11 @@ function MvBuilder(gulp, config, buildConfig) {
       return stream;
     });
 
-  gulp.task('copyLibsToTemp', ['uglifyScriptsInTemp'], function() {
-    return combine(
-      gulp.src(config.mainJs),
-      utils.getRequireJsConfigPaths()
-    )
-      .on('end', function() {
-        var baseUrl = config.app + '/scripts/',
-          destDir = config.temp + '/scripts/libs/',
-          libsPaths = utils.requireJsPaths,
-          lib;
-
-          for(lib in libsPaths) {
-            if (libsPaths.hasOwnProperty(lib)) {
-              gulp.src(baseUrl + libsPaths[lib] + '.js')
-                .pipe($.rename(lib + '.js'))
-                .pipe($.uglify({ mangle: false }))
-                .pipe(gulp.dest(destDir));
-            }
-          }
-
-      });
-  });
-
   /**
    * Copies config file or its template to temp dir
    */
   gulp.task('copyConfigToTemp', ['copyStandaloneFilesToTemp'], function() {
     var configUrl;
-    var revAll = new $.revAll();
 
     if (args.template) {
       configUrl = config.root + 'configs/template/config';
@@ -200,7 +176,7 @@ function MvBuilder(gulp, config, buildConfig) {
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['usemin', 'fix-paths', 'replaceMain', 'enableBundles'], function() {
+  gulp.task('revision', ['combineResourcesInIndex', 'fixResourcePaths', 'enableBundles', 'uglifyScriptsInTemp'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
@@ -215,19 +191,9 @@ function MvBuilder(gulp, config, buildConfig) {
   });
 
   /**
-   * Replaces lib paths in main.js file
-   */
-  gulp.task('replaceMain', ['usemin'], function() {
-    return gulp.src([config.tempScripts + '/main.js'])
-      .pipe(utils.replaceRequireJsConfigPaths())
-      .pipe($.uglify())
-      .pipe(gulp.dest(config.tempScripts));
-  });
-
-  /**
    * Fixes paths for resources from dependencies
    */
-  gulp.task('fix-paths', ['usemin'], function() {
+  gulp.task('fixResourcePaths', ['combineResourcesInIndex'], function() {
     return gulp.src(config.temp + '/styles/**/*')
       .pipe($.replace('../../img', '../img'))
       .pipe($.replace('../../fonts', '../fonts'))
@@ -324,14 +290,17 @@ function MvBuilder(gulp, config, buildConfig) {
     server.start();
   });
 
+  /**
+   * Removes temp files used for r.js compilation
+   */
   gulp.task('removeRjsTemp', ['copyStandaloneFilesToTemp', 'copyBundlesToTemp'], function(done) {
-    return del([config.rjsTemp], done);
+    return del([config.rjsTemp, config.scripts + '/libs.all.js'], done);
   });
 
   /**
    * Bundles js files using standard r.js configuration, outputs to buildConfig.dir
    */
-  gulp.task('rjs-compile', function(cb) {
+  gulp.task('rjs-compile', ['createLibConfigs'], function(cb) {
     requirejs.optimize(buildConfig, function(buildResponse) {
       console.log(buildResponse);
       cb();
@@ -340,7 +309,7 @@ function MvBuilder(gulp, config, buildConfig) {
     });
   });
 
-  gulp.task('copyStandaloneFilesToTemp', ['rjs-compile', 'clean'], function() {
+  gulp.task('copyStandaloneFilesToTemp', ['rjs-compile', 'clean', 'createLibConfigs'], function() {
     var standaloneFiles = [];
 
     buildConfig.custom.standaloneFiles.forEach(function(file) {
@@ -373,13 +342,17 @@ function MvBuilder(gulp, config, buildConfig) {
   });
 
   /**
-   * Enables bundle config in main.js
+   * Enables bundle config in main.js, updates bundle config
    */
   gulp.task('enableBundles', ['copyStandaloneFilesToTemp'], function() {
     var mainjs = config.tempScripts + '/main.js';
 
     return gulp.src(mainjs)
       .pipe($.replace('_replaceKeyOnBuild', ''))
+      .pipe($.data(function(file) {
+        return { libs: utils.getLibPaths(file) };
+      }))
+      .pipe(utils.insertLibPaths())
       .pipe(gulp.dest(config.tempScripts));
   });
 
@@ -393,6 +366,36 @@ function MvBuilder(gulp, config, buildConfig) {
       .pipe($.uglify())
       .pipe(gulp.dest(config.tempScripts));
   });
+
+  /**
+   * Reads libs from main.js,
+   * creates libs.all.js needed for libs bundle,
+   * creates libs.config exclusions which is used in build.config
+   */
+  gulp.task('createLibConfigs', ['createLibsAllFile', 'createLibsConfigFile'], function(done) {
+    buildConfig = buildConfig();
+    done();
+  });
+
+    gulp.task('createLibsAllFile', [], function() {
+      return gulp.src(config.mainJs)
+        .pipe($.data(function(file) {
+          return { libs: utils.getLibPaths(file) };
+        }))
+        .pipe(utils.createLibsAllContent())
+        .pipe($.rename('libs.all.js'))
+        .pipe(gulp.dest(config.scripts));
+    });
+
+    gulp.task('createLibsConfigFile', [], function() {
+      return gulp.src(config.mainJs)
+        .pipe($.data(function(file) {
+          return { libs: utils.getLibPaths(file) };
+        }))
+        .pipe(utils.createLibsConfigContent())
+        .pipe($.rename('libs.config.js'))
+        .pipe(gulp.dest(config.rjsTemp));
+    });
 
 }
 

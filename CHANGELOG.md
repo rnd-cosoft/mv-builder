@@ -1,3 +1,7 @@
+### 0.3.1 (2016-02-15)
+
+* Added lib bundling support
+
 ### 0.3.0 (2016-02-08)
 
 * Implemented requirejs bundling support, this will work only with modular architecture and proper r.js build config 

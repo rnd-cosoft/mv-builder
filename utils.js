@@ -7,9 +7,11 @@ function Utils() {
   this.requireJsPaths = null;
   this.log = log;
   this.addTimestampComment = addTimestampComment;
-  this.getRequireJsConfigPaths = getRequireJsConfigPaths;
-  this.replaceRequireJsConfigPaths = replaceRequireJsConfigPaths;
+  this.getLibPaths = getLibPaths;
   this.isNotPrivate = isNotPrivate;
+  this.createLibsAllContent = createLibsAllContent;
+  this.createLibsConfigContent = createLibsConfigContent;
+  this.insertLibPaths = insertLibPaths;
 
   /**
    * @desc Log a message or series of messages using chalk's blue color.
@@ -25,81 +27,6 @@ function Utils() {
     } else {
       $.util.log($.util.colors.blue(msg));
     }
-  }
-
-  /**
-   * @desc Replaces require js config paths
-   * @returns {Object}
-   */
-  function replaceRequireJsConfigPaths() {
-    var pathsObject = this.requireJsPaths;
-    var stream = new Stream.Transform({objectMode: true});
-
-    stream._transform = function(file, unused, callback) {
-      var content = String(file.contents),
-        start = /\/\*\* requirejs-config-paths:start \*\*\//gim,
-        end = /\/\*\* requirejs-config-paths:end \*\*\//gim;
-
-      var final = '';
-      var split = content.split(start);
-      var temp, splitTwo;
-
-      for(var key in pathsObject) {
-        pathsObject[key] = './libs/' + key;
-      }
-
-      for(var i = 0; i < split.length; i++) {
-        if(split[i].match(end)) {
-          splitTwo = split[i].split(end);
-          splitTwo[0] = JSON.stringify(pathsObject) + ',';
-          temp = splitTwo.join('');
-          split[i] = 'paths: ' + temp.replace(/\.js/g, '').replace(/"/g, '\'');
-          break;
-        }
-      }
-
-      final = split.join('');
-
-      file.contents = new Buffer(final);
-
-      callback(null, file);
-    };
-
-    return stream;
-  }
-
-  /**
-   * @desc Gets require js config paths from main file
-   * @returns {Object}
-   */
-  function getRequireJsConfigPaths() {
-    var that = this;
-    var stream = new Stream.Transform({objectMode: true});
-
-    stream._transform = function(file, unused, callback) {
-      var content = String(file.contents),
-        start = /\/\*\* requirejs-config-paths:start \*\*\//gim,
-        end = /\/\*\* requirejs-config-paths:end \*\*\//gim;
-
-      var final = '';
-      var split = content.split(start);
-      var splitTwo;
-      split.forEach(function(item) {
-        if(item.match(end)) {
-          splitTwo = item.split(end);
-          final += splitTwo[0];
-        }
-      });
-
-      final = final.substring(10, final.length - 4);
-      final = final.replace(/'/gi, '"');
-      file.contents = new Buffer(final);
-
-      callback(null, file);
-      that.requireJsPaths = JSON.parse(final);
-    };
-
-    return stream;
   }
 
   /**
@@ -130,6 +57,123 @@ function Utils() {
   function isNotPrivate(file){
     return !/^_/.test(file.path.split('/').pop());
   }
+
+  /**
+   * @desc Gets libs paths from main file
+   * @param {Object} file
+   * @returns {Array}
+   */
+  function getLibPaths(file) {
+    var content = String(file.contents),
+      start = /\/\* libs-paths:start \*\//gim,
+      end = /\/\* libs-paths:end \*\//gim;
+
+    var libPathsSegment = '';
+    var split = content.split(start);
+    var splitTwo;
+    split.forEach(function(item) {
+      if(item.match(end)) {
+        splitTwo = item.split(end);
+        libPathsSegment += splitTwo[0];
+      }
+    });
+
+    var libKeys = [];
+    var objectKeyMatcher = /('|").*('|") *:/gi;
+    var matches = libPathsSegment.match(objectKeyMatcher);
+    matches.forEach(function(key) {
+      libKeys.push(key.replace(/'/g, '').replace(':', ''));
+    });
+
+    return libKeys;
+  }
+
+  /**
+   * @desc Creates libs.all.js content based on lib keys from file.data.libs array
+   * @returns {Object}
+   */
+  function createLibsAllContent() {
+    var stream = new Stream.Transform({objectMode: true});
+
+    stream._transform = function(file, unused, callback) {
+      var fileContents = [
+        'define([\n',
+        '], function() {});'
+      ];
+
+      if (file.data) {
+        file.data.libs.forEach(function(lib) {
+          if (lib) {
+            fileContents[0] += "'" + lib + "',\n";
+          }
+        });
+        file.contents = new Buffer(fileContents.join(''));
+      }
+
+      callback(null, file);
+    };
+
+    return stream;
+  }
+
+  /**
+   * Creates libs.config.js content based on lib keys from file.data.libs array
+   * @returns {Object}
+   */
+  function createLibsConfigContent() {
+    var stream = new Stream.Transform({objectMode: true});
+
+    stream._transform = function(file, unused, callback) {
+      var fileContents = [
+        'module.exports = function () {\n',
+        'return [\n',
+        '];\n};'
+      ];
+
+      if (file.data) {
+        file.data.libs.forEach(function(lib) {
+          if (lib) {
+            fileContents[1] += "'" + lib + "',\n";
+          }
+        });
+        file.contents = new Buffer(fileContents.join(''));
+      }
+
+      callback(null, file);
+    };
+
+    return stream;
+  }
+
+  /**
+   * @desc Inserts lib paths to file content from file.data.libs
+   * @returns {Object}
+   */
+  function insertLibPaths() {
+    var stream = new Stream.Transform({objectMode: true});
+
+    stream._transform = function(file, unused, callback) {
+      var content = String(file.contents);
+      var libs = '';
+
+      if (file.data) {
+        file.data.libs.forEach(function(lib) {
+          if (lib) {
+            libs += "'" + lib + "',\n";
+          }
+        });
+        content = content.replace(/\/\* build:insert-libs-here \*\//gi, libs);
+
+        file.contents = new Buffer(content);
+      }
+
+      callback(null, file);
+    };
+
+    return stream;
+  }
+
+
 }
 
 module.exports = new Utils();
