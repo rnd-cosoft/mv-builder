@@ -377,25 +377,25 @@ function MvBuilder(gulp, config, buildConfig) {
     done();
   });
 
-    gulp.task('createLibsAllFile', [], function() {
-      return gulp.src(config.mainJs)
-        .pipe($.data(function(file) {
-          return { libs: utils.getLibPaths(file) };
-        }))
-        .pipe(utils.createLibsAllContent())
-        .pipe($.rename('libs.all.js'))
-        .pipe(gulp.dest(config.scripts));
-    });
+  gulp.task('createLibsAllFile', [], function() {
+    return gulp.src(config.mainJs)
+      .pipe($.data(function(file) {
+        return { libs: utils.getLibPaths(file) };
+      }))
+      .pipe(utils.createLibsAllContent())
+      .pipe($.rename('libs.all.js'))
+      .pipe(gulp.dest(config.scripts));
+  });
 
-    gulp.task('createLibsConfigFile', [], function() {
-      return gulp.src(config.mainJs)
-        .pipe($.data(function(file) {
-          return { libs: utils.getLibPaths(file) };
-        }))
-        .pipe(utils.createLibsConfigContent())
-        .pipe($.rename('libs.config.js'))
-        .pipe(gulp.dest(config.rjsTemp));
-    });
+  gulp.task('createLibsConfigFile', [], function() {
+    return gulp.src(config.mainJs)
+      .pipe($.data(function(file) {
+        return { libs: utils.getLibPaths(file) };
+      }))
+      .pipe(utils.createLibsConfigContent())
+      .pipe($.rename('libs.config.js'))
+      .pipe(gulp.dest(config.rjsTemp));
+  });
 
 }
 
