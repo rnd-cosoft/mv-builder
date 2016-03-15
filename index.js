@@ -1,9 +1,4 @@
-var del = require('del');
-var args = require('yargs').argv;
-var merge = require('merge-stream');
-var requirejs = require('requirejs');
 var $ = require('gulp-load-plugins')({lazy: true});
-var utils = require('./utils');
 
 function MvBuilder(gulp, config, buildConfig) {
 

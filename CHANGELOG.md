@@ -1,3 +1,7 @@
+### 0.4.0 (2016-03-15)
+
+* Added r.js bundling configuration generation 
+
 ### 0.3.1 (2016-02-15)
 
 * Added lib bundling support

@@ -2,8 +2,11 @@ var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('../utils');
 var del = require('del');
 var Server = require('karma').Server;
+var path = require('path');
+var rjsConfigGenerator = require('../rjsConfigGenerator')();
 
 module.exports = function(gulp, config) {
+  subTasks();
 
   gulp.task('vet', ['jshint', 'jscs']);
 
@@ -105,7 +108,13 @@ module.exports = function(gulp, config) {
     server.start();
   });
 
-  subTasks();
+  /**
+   * Generates *.all.js files for shared folders.
+   */
+  gulp.task('allJs', function(cb) {
+    rjsConfigGenerator.generateAllJsFiles(path.join(config.scripts, 'shared'));
+    cb();
+  });
 
   function subTasks() {
 

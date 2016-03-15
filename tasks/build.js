@@ -4,10 +4,13 @@ var merge = require('merge-stream');
 var requirejs = require('requirejs');
 var $ = require('gulp-load-plugins')({lazy: true});
 var utils = require('../utils');
+var rjsConfigGenerator = require('../rjsConfigGenerator')();
 
-module.exports = function(gulp, config, buildConfig) {
+module.exports = function(gulp, config, buildConfigFactory) {
+  var buildConfig, bundlesConfig; // set by task
+
+  rjsCompilationAndConfigurationRelatedTasks();
   copyEverythingToTempRelatedTasks();
-  createLibConfigsRelatedTasks();
 
   gulp.task('build', ['copyEverythingToTemp', 'revision', 'copyConfigToTemplates'], function(done) {
     // Just clean up temp folder after everything is done
@@ -69,7 +72,7 @@ module.exports = function(gulp, config, buildConfig) {
   /**
    * Revisions everything
    */
-  gulp.task('revision', ['combineResourcesInIndex', 'fixResourcePaths', 'enableBundles', 'uglifyScriptsInTemp'], function() {
+  gulp.task('revision', ['combineResourcesInIndex', 'fixResourcePaths', 'configureBundlingInMainJs', 'uglifyScriptsInTemp'], function() {
     var replacer = function(fragment, replaceRegExp, newReference, referencedFile){
       var regex = /^\/\('\|"\)\([a-zA-Z0-9-_\\]+\)\(\)\('\|"\|\$\)\/g$/g;
       if (!replaceRegExp.toString().match(regex)) {
@@ -96,28 +99,13 @@ module.exports = function(gulp, config, buildConfig) {
   /**
    * Bundles js files using standard r.js configuration, outputs to buildConfig.dir
    */
-  gulp.task('rjs-compile', ['createLibConfigs'], function(cb) {
+  gulp.task('rjs-compile', ['createLibsAllFile', 'createBuildConfig'], function(cb) {
     requirejs.optimize(buildConfig, function(buildResponse) {
       console.log(buildResponse);
       cb();
     }, function(err) {
       cb(err);
     });
-  });
-
-  /**
-   * Enables bundle config in main.js, updates bundle config
-   */
-  gulp.task('enableBundles', ['copyStandaloneFilesToTemp'], function() {
-    var mainjs = config.tempScripts + '/main.js';
-
-    return gulp.src(mainjs)
-      .pipe($.replace('_replaceKeyOnBuild', ''))
-      .pipe($.data(function(file) {
-        return { libs: utils.getLibPaths(file) };
-      }))
-      .pipe(utils.insertLibPaths())
-      .pipe(gulp.dest(config.tempScripts));
   });
 
   gulp.task('uglifyScriptsInTemp', ['copyStandaloneFilesToTemp', 'copyBundlesToTemp'], function() {
@@ -131,15 +119,46 @@ module.exports = function(gulp, config, buildConfig) {
       .pipe(gulp.dest(config.tempScripts));
   });
 
-  /**
-   * Reads libs from main.js,
-   * creates libs.all.js needed for libs bundle,
-   * creates libs.config exclusions which is used in build.config
-   */
-  gulp.task('createLibConfigs', ['_createLibsAllFile', '_createLibsConfigFile'], function(done) {
-    buildConfig = buildConfig();
-    done();
-  });
+  function rjsCompilationAndConfigurationRelatedTasks() {
+
+    /**
+     * Enables bundle config in main.js, updates bundle config
+     */
+    gulp.task('configureBundlingInMainJs', ['copyStandaloneFilesToTemp', 'createMainJsBundleConfig'], function() {
+      var mainjs = config.tempScripts + '/main.js';
+
+      return gulp.src(mainjs)
+        .pipe(utils.insertObjectKey('bundles', bundlesConfig, /\/\* build:insert-bundles-config-here \*\//gi))
+        .pipe(gulp.dest(config.tempScripts));
+    });
+
+    /**
+     * Creates build config variable and enhances it before passing to r.js
+     */
+    gulp.task('createBuildConfig', function(cb) {
+      buildConfig = buildConfigFactory.rjsOptions;
+      buildConfig = rjsConfigGenerator.generateModulesConfig(config.mainJs, config.scripts, buildConfig);
+      cb();
+    });
+
+    /**
+     * Reads bundle config and enhances it before inserting into main.js
+     */
+    gulp.task('createMainJsBundleConfig', ['createBuildConfig'], function(cb) {
+      bundlesConfig = buildConfigFactory.bundlesConfig;
+      bundlesConfig = rjsConfigGenerator.generateBundleConfig(config.mainJs, bundlesConfig, buildConfig.modules);
+      cb();
+    });
+
+    /**
+     * Creates libs.all.js needed for creating libs bundle
+     */
+    gulp.task('createLibsAllFile', function(cb) {
+      rjsConfigGenerator.generateLibsAllFile(config.mainJs, config.scripts);
+      cb();
+    });
+
+  }
 
   function copyEverythingToTempRelatedTasks() {
 
@@ -210,10 +229,10 @@ module.exports = function(gulp, config, buildConfig) {
         .pipe(gulp.dest(config.tempScripts));
     });
 
-    gulp.task('copyStandaloneFilesToTemp', ['rjs-compile', 'clean', 'createLibConfigs'], function() {
+    gulp.task('copyStandaloneFilesToTemp', ['rjs-compile', 'clean', 'createBuildConfig'], function() {
       var standaloneFiles = [];
 
-      buildConfig.custom.standaloneFiles.forEach(function(file) {
+      buildConfigFactory.standaloneFiles.forEach(function(file) {
         standaloneFiles.push(config.rjsTemp + '/**/' + file + '.js');
       });
 
@@ -221,7 +240,7 @@ module.exports = function(gulp, config, buildConfig) {
         .pipe(gulp.dest(config.tempScripts));
     });
 
-    gulp.task('copyBundlesToTemp', ['rjs-compile', 'clean'], function() {
+    gulp.task('copyBundlesToTemp', ['rjs-compile', 'clean', 'createBuildConfig'], function() {
       var bundleFiles = [];
 
       // parse bundle files from modules config
@@ -232,11 +251,8 @@ module.exports = function(gulp, config, buildConfig) {
 
       return gulp.src(bundleFiles)
         .pipe($.rename(function(path) {
-          var basename = path.dirname.replace(/\//g, '-');
-          if (!basename || basename.length < 2) {
-            basename = path.basename;
-          }
-          path.basename = basename + '.bundle';
+          var name = path.dirname ? path.dirname + '/' + path.basename : path.basename;
+          path.basename = rjsConfigGenerator.getBundleFilename(name);
           path.dirname = '';
         }))
         .pipe(gulp.dest(config.tempScripts));
@@ -250,31 +266,5 @@ module.exports = function(gulp, config, buildConfig) {
     });
 
   }
-
-  function createLibConfigsRelatedTasks() {
-
-    gulp.task('_createLibsAllFile', [], function() {
-      return gulp.src(config.mainJs)
-        .pipe($.data(function(file) {
-          return { libs: utils.getLibPaths(file) };
-        }))
-        .pipe(utils.createLibsAllContent())
-        .pipe($.rename('libs.all.js'))
-        .pipe(gulp.dest(config.scripts));
-    });
-
-    gulp.task('_createLibsConfigFile', [], function() {
-      return gulp.src(config.mainJs)
-        .pipe($.data(function(file) {
-          return { libs: utils.getLibPaths(file) };
-        }))
-        .pipe(utils.createLibsConfigContent())
-        .pipe($.rename('libs.config.js'))
-        .pipe(gulp.dest(config.rjsTemp));
-    });
-
-  }
-
-
 
 };

@@ -50,6 +50,10 @@ module.exports = function () {
 
     jshintrc: root + '.jshintrc', // JSHint rules file
     karmaConfig: root + 'karma.conf.js', // Karma config file
+    
+    scripts: root + 'app/scripts',
+    rjsTemp: root + 'app/scripts/temp',
+    tempScripts: root + '.tmp/scripts'
   };
 
 
@@ -65,15 +69,111 @@ gulp.js
 
 var gulp = require('gulp'),
   config = require('./gulp.config')(),
-  buildConfig = require('./build.config')(),
+  buildConfig = require('./build.config')(config),
   mvBuilder = require('mv-builder')(gulp, config, buildConfig);
+```
+
+
+build.config.js
+----------------
+
+```js
+module.exports = function(config) {
+
+  return {
+    rjsOptions: getRjsOptions(),
+    bundlesConfig: getMainJsBundlesConfig(),
+    standaloneFiles: getStandaloneFiles()
+  };
+
+  /**
+   * Options passed to r.js
+   *
+   * "modules" config is a skeleton configuration, which is configured on build, by scanning module directories
+   * and parsing files
+   */
+  function getRjsOptions() {
+    //NOTE: keys prefixed with '$' are not standard r.js options - these are used for config enhancement in gulp
+
+    return {
+      baseUrl: config.scripts,
+      mainConfigFile: config.scripts + '/main.js',
+      dir: config.rjsTemp,
+      optimize: 'none', // minification will be done in next build steps
+
+      // exclude from bundling
+      paths: {
+        'shared/globalHelpers': 'empty:',
+        'config': 'empty:'
+      },
+
+      // main modules configuration
+      modules: [
+        // app bundle combines all .module and .config files
+        {
+          name: 'app'
+        },
+        {
+          name: 'libs.all',
+          $excludeLibs: false
+        },
+        {
+          $path: 'core',
+          $name: 'bootstrapper'
+        },
+        {
+          $path: 'timeReporting/absenceOverview'
+        },
+        {
+          $path: 'shared/components'
+        },
+        {
+          $path: 'shared/filters'
+        },
+        {
+          name: 'standardConfigExample',
+          include: [],
+          exclude: []
+        }
+      ]
+    };
+  }
+
+  /**
+   * Configuration inserted to main.js.
+   *
+   * Custom includes should be added here.
+   *
+   * This config is filled/extended in gulp with data from modules config (rjsOptions).
+   */
+  function getMainJsBundlesConfig() {
+    return {
+      'app.bundle': [
+        'providerConfig',
+        'routeConfig'
+      ]
+    };
+  }
+
+  /**
+   * Files not included in any bundle/module
+   */
+  function getStandaloneFiles() {
+    return [
+      'main',
+      'shared/globalHelpers',
+      'shims/*'
+    ];
+  }
+};
+
 ```
 
 Available task
 ----------------
 List of available tasks:
 * `gulp` - list all available tasks
-* `gulp help` - list all available tasks
+* `gulp build` - builds project
 * `gulp jshint` - validates all js files with jshint
 * `gulp jscs` - validates all js files with cs
 * `gulp vet` - triggers jscs and jshint tasks
@@ -84,3 +184,4 @@ List of available tasks:
 * `gulp watch-less` - watches for LESS files changes and triggers compile-less task on them
 * `gulp compile-sass` - compiles SASS files
 * `gulp watch-sass` - watches for SASS files changes and triggers compile-sass task on them
+* `gulp allJs` - generates *.all.js files for shared modules

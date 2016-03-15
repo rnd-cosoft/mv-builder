@@ -1,6 +1,6 @@
 {
   "name": "mv-builder",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "dependencies": {
     "abbrev": {
       "version": "1.0.7",
@@ -1397,6 +1397,11 @@
           "version": "1.0.2",
           "from": "inherits@>=1.0.0 <2.0.0",
           "resolved": "https://registry.npmjs.org/inherits/-/inherits-1.0.2.tgz"
+        },
+        "lodash": {
+          "version": "1.0.2",
+          "from": "lodash@>=1.0.1 <1.1.0",
+          "resolved": "https://registry.npmjs.org/lodash/-/lodash-1.0.2.tgz"
         }
       }
     },
@@ -2615,9 +2620,9 @@
       "resolved": "https://registry.npmjs.org/load-json-file/-/load-json-file-1.1.0.tgz"
     },
     "lodash": {
-      "version": "1.0.2",
-      "from": "lodash@>=1.0.1 <1.1.0",
-      "resolved": "https://registry.npmjs.org/lodash/-/lodash-1.0.2.tgz"
+      "version": "4.6.1",
+      "from": "lodash@latest",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.6.1.tgz"
     },
     "lodash._baseassign": {
       "version": "3.2.0",
