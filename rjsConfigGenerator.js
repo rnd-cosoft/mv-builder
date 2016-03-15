@@ -319,7 +319,7 @@ module.exports = function() {
     var dependencies = [];
 
     var scriptFiles = globby.sync(
-      [path.join(moduleFolder, '**/*.js'), '!**/*.module.js', '!**/*.config.js']
+      [path.join(moduleFolder, '**/*.js'), '!**/*.module.js', '!**/*.config.js', '!**/*.spec.js']
     );
     scriptFiles.forEach(function(script) {
       var fileContent = fs.readFileSync(script, 'utf8');
