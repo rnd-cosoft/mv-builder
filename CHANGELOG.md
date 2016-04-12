@@ -1,3 +1,7 @@
+### 0.4.2 (2016-04-12)
+
+* Added plumber and autoprefixer for sass compilation
+
 ### 0.4.0 (2016-03-15)
 
 * Added r.js bundling configuration generation 
