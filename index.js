@@ -309,11 +309,18 @@ function MvBuilder(gulp, config) {
 
     return gulp
       .src(config.sassSrc)
+      .pipe($.plumber({
+        errorHandler: function (err) {
+          console.log(err);
+          this.emit('end');
+        }
+      }))
       .pipe($.sass({
         includePaths: [config.compassMixins],
         outputStyle: 'expanded',
         errLogToConsole: true
       }))
+      .pipe($.autoprefixer({ browsers: config.autoprefixerRules }))
       .pipe(gulp.dest(config.sassDest));
   });
 
@@ -348,7 +355,7 @@ function MvBuilder(gulp, config) {
         }
       }))
       .pipe($.less())
-      .pipe($.autoprefixer({ browsers: config.browserslist }))
+      .pipe($.autoprefixer({ browsers: config.autoprefixerRules }))
       .pipe(filter)
       .pipe(gulp.dest(config.lessDest));
   });
