@@ -35,7 +35,7 @@ module.exports = function () {
     // Documentation for autoprefixerRules: https://github.com/ai/browserslist
 
     indexHtml: root + 'app/index.html', // Location of index.html file (main file of application)
-    mainJs: root + 'app/scripts/main.js', // Location of main.js file
+    mainJs: root + '.tmpBabel/scripts/main.js', // Location of main.js file in babel temp
 
     allJs: root + 'app/scripts/**/*.js', // Location of all JS files
     allViews: root + 'app/views/**/*.html', // Location of all views
@@ -51,7 +51,8 @@ module.exports = function () {
     jshintrc: root + '.jshintrc', // JSHint rules file
     karmaConfig: root + 'karma.conf.js', // Karma config file
     
-    scripts: root + 'app/scripts',
+    scripts: root + '.tmpBabel/scripts',
+    tmpBabel: root + '.tmpBabel',
     rjsTemp: root + 'app/scripts/temp',
     tempScripts: root + '.tmp/scripts'
   };

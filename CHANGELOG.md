@@ -1,3 +1,9 @@
+### 0.5.0 (2016-04-18)
+
+* Added Babel for ES6 support
+#### Breaking changes:
+* `config.tmpBabel` is used for defining temp directory for Babel compiles code. `config.main`, `config.scripts` should be changed accordingly (see readme.md) 
+
 ### 0.4.2 (2016-04-12)
 
 * Added plumber and autoprefixer for sass compilation
