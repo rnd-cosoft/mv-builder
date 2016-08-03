@@ -149,12 +149,13 @@ function MvBuilder(gulp, config) {
    */
   gulp.task('setConfigFile', ['usemin', 'replaceMain'], function() {
     var configUrl;
+    var revAll = new $.revAll();
 
     if(args.template) {
-      configUrl = config.root + 'configs/dist_template/config';
+      configUrl = config.temp + '/scripts/configs/';
       return gulp.src([configUrl + '*.js'])
-        .pipe($.rename('config.js'))
-        .pipe(gulp.dest(config.temp + '/scripts'));
+        .pipe(revAll.revision())
+        .pipe(gulp.dest(config.root + 'configs/dist_template/'));
     }
   });
 
@@ -169,7 +170,7 @@ function MvBuilder(gulp, config) {
     if(args.development) {
       configUrl = config.root + 'configs/development/config';
     } else if(args.template) {
-      configUrl = config.root + 'configs/template/config';
+      configUrl = config.root + 'app/scripts/configs/*';
     } else {
       configUrl = config.root + 'app/scripts/config';
     }
@@ -225,23 +226,25 @@ function MvBuilder(gulp, config) {
 
     /* Copy JS */
     if(!args.concat) {
+      var stream = merge();
       var configDest;
 
       if(args.template) {
-        configDest = config.root + '/configs/dist_template/';
+        configDest = config.temp + '/scripts/configs/';
       } else {
         configDest = config.temp + '/scripts/';
       }
 
-      gulp.src([configUrl + '.js'])
+      stream.add(gulp.src([config.allJs, '!' + config.mainJs, '!' + configUrl])
+        .pipe($.uglify())
+        .pipe(gulp.dest(config.temp + '/scripts')));
+
+      stream.add(gulp.src([configUrl + '.js'])
         .pipe($.uglify())
         .pipe(utils.addTimestampComment())
-        .pipe(revAll.revision())
-        .pipe(gulp.dest(configDest));
+        .pipe(gulp.dest(configDest)));
 
-      return gulp.src([config.allJs, '!' + config.mainJs, '!' + config.app + '/scripts/config.js'])
-        .pipe($.uglify())
-        .pipe(gulp.dest(config.temp + '/scripts'));
+      return stream;
 
     } else {
       return returnValue;
