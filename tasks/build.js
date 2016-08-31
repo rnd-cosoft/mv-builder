@@ -37,7 +37,9 @@ module.exports = function(gulp, config, buildConfigFactory) {
     }
 
     function bless() {
-      return $.bless();
+      return $.bless({
+        imports: false
+      });
     }
 
     function uglify() {

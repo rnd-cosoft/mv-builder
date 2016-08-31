@@ -1,3 +1,7 @@
+### 0.4.3 (2016-08-31)
+
+* Set imports option to false for gulp-bless plugin
+
 ### 0.4.2 (2016-04-12)
 
 * Added plumber and autoprefixer for sass compilation
