@@ -74,7 +74,9 @@ function MvBuilder(gulp, config) {
     }
 
     function bless() {
-      return $.bless();
+      return $.bless({
+        imports: false
+      });
     }
 
     function uglify() {
