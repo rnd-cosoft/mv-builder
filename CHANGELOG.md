@@ -1,3 +1,8 @@
+### 0.4.4 (2016-09-09)
+
+* Added gulp-stubs plugin
+* Added gulp stubs task with defaults
+
 ### 0.4.3 (2016-08-31)
 
 * Set imports option to false for gulp-bless plugin
