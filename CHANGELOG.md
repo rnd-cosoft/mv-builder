@@ -1,3 +1,8 @@
+### 0.4.6 (2016-11-25)
+
+* Fixed gulp-bless version
+* Replaced karma-phantomjs2-launcher with karma-phantomjs-launcher 
+
 ### 0.4.5 (2016-11-25)
 
 * Added yarn.lock
