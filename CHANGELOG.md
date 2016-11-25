@@ -1,3 +1,9 @@
+### 0.4.5 (2016-11-25)
+
+* Added yarn.lock
+* Updated karma-phantomjs2-launcher launcher
+* Added phantomjs-prebuilt
+
 ### 0.4.4 (2016-09-09)
 
 * Added gulp-stubs plugin
