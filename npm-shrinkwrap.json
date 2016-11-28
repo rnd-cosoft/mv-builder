@@ -517,9 +517,9 @@
       "resolved": "https://registry.npmjs.org/camelcase-keys/-/camelcase-keys-2.1.0.tgz"
     },
     "caniuse-db": {
-      "version": "1.0.30000587",
+      "version": "1.0.30000588",
       "from": "caniuse-db@>=1.0.30000578 <2.0.0",
-      "resolved": "https://registry.npmjs.org/caniuse-db/-/caniuse-db-1.0.30000587.tgz"
+      "resolved": "https://registry.npmjs.org/caniuse-db/-/caniuse-db-1.0.30000588.tgz"
     },
     "caseless": {
       "version": "0.11.0",
@@ -995,14 +995,14 @@
       "resolved": "https://registry.npmjs.org/emitter-component/-/emitter-component-1.1.1.tgz"
     },
     "engine.io": {
-      "version": "1.8.0",
-      "from": "engine.io@1.8.0",
-      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.8.0.tgz"
+      "version": "1.8.1",
+      "from": "engine.io@1.8.1",
+      "resolved": "https://registry.npmjs.org/engine.io/-/engine.io-1.8.1.tgz"
     },
     "engine.io-client": {
-      "version": "1.8.0",
-      "from": "engine.io-client@1.8.0",
-      "resolved": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-1.8.0.tgz",
+      "version": "1.8.1",
+      "from": "engine.io-client@1.8.1",
+      "resolved": "https://registry.npmjs.org/engine.io-client/-/engine.io-client-1.8.1.tgz",
       "dependencies": {
         "component-emitter": {
           "version": "1.2.1",
@@ -1727,7 +1727,7 @@
     },
     "gulp-sass": {
       "version": "2.3.2",
-      "from": "gulp-sass@>=2.1.1 <3.0.0",
+      "from": "gulp-sass@>=2.3.2 <3.0.0",
       "resolved": "https://registry.npmjs.org/gulp-sass/-/gulp-sass-2.3.2.tgz"
     },
     "gulp-stubs": {
@@ -2748,9 +2748,9 @@
       "resolved": "https://registry.npmjs.org/lower-case-first/-/lower-case-first-1.0.2.tgz"
     },
     "lru-cache": {
-      "version": "4.0.1",
+      "version": "4.0.2",
       "from": "lru-cache@>=4.0.1 <5.0.0",
-      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-4.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-4.0.2.tgz"
     },
     "map-obj": {
       "version": "1.0.1",
@@ -2895,7 +2895,7 @@
     },
     "node-sass": {
       "version": "3.13.0",
-      "from": "node-sass@>=3.4.2 <4.0.0",
+      "from": "node-sass@>=3.13.0 <4.0.0",
       "resolved": "https://registry.npmjs.org/node-sass/-/node-sass-3.13.0.tgz",
       "dependencies": {
         "lodash.assign": {
@@ -3609,9 +3609,9 @@
       "resolved": "https://registry.npmjs.org/sntp/-/sntp-1.0.9.tgz"
     },
     "socket.io": {
-      "version": "1.6.0",
+      "version": "1.7.1",
       "from": "socket.io@>=1.4.5 <2.0.0",
-      "resolved": "https://registry.npmjs.org/socket.io/-/socket.io-1.6.0.tgz"
+      "resolved": "https://registry.npmjs.org/socket.io/-/socket.io-1.7.1.tgz"
     },
     "socket.io-adapter": {
       "version": "0.5.0",
@@ -3619,9 +3619,9 @@
       "resolved": "https://registry.npmjs.org/socket.io-adapter/-/socket.io-adapter-0.5.0.tgz"
     },
     "socket.io-client": {
-      "version": "1.6.0",
-      "from": "socket.io-client@1.6.0",
-      "resolved": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-1.6.0.tgz",
+      "version": "1.7.1",
+      "from": "socket.io-client@1.7.1",
+      "resolved": "https://registry.npmjs.org/socket.io-client/-/socket.io-client-1.7.1.tgz",
       "dependencies": {
         "component-emitter": {
           "version": "1.2.1",
@@ -3829,9 +3829,9 @@
       "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
     },
     "through2": {
-      "version": "2.0.1",
+      "version": "2.0.2",
       "from": "through2@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.1.tgz",
+      "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.2.tgz",
       "dependencies": {
         "isarray": {
           "version": "1.0.0",
@@ -3839,9 +3839,9 @@
           "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz"
         },
         "readable-stream": {
-          "version": "2.0.6",
-          "from": "readable-stream@>=2.0.0 <2.1.0",
-          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz"
+          "version": "2.2.2",
+          "from": "readable-stream@>=2.1.5 <3.0.0",
+          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.2.2.tgz"
         }
       }
     },
@@ -4161,7 +4161,7 @@
     },
     "xtend": {
       "version": "4.0.1",
-      "from": "xtend@>=4.0.0 <4.1.0",
+      "from": "xtend@>=4.0.1 <4.1.0",
       "resolved": "https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz"
     },
     "y18n": {
