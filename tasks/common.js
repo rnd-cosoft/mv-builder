@@ -123,6 +123,17 @@ module.exports = function(gulp, config) {
     cb();
   });
 
+  /**
+   * Generates stubs using gulp-stubs plugin
+   */
+  gulp.task('stubs', function() {
+    return gulp.src(config.specsForStubs)
+      .pipe($.stubs({
+        marker: config.stubsMarker || 'gulp-stubs',
+        templateUrl: config.stubsTemplateUrl || __dirname + '/../templates/stubs.txt'
+      }));
+  });
+
   function subTasks() {
 
     /**
