@@ -1,3 +1,8 @@
+### 0.5.2 (2017-01-27)
+
+* Replaced babel with typescript (update your configs!)
+* Fixed building and coverage
+
 ### 0.5.1 (2017-01-19)
 
 * Catched up with 0.4.x branch

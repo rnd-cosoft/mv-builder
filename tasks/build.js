@@ -137,7 +137,7 @@ module.exports = function(gulp, config, buildConfigFactory) {
     /**
      * Creates build config variable and enhances it before passing to r.js
      */
-    gulp.task('createBuildConfig', ['babel'], function(cb) {
+    gulp.task('createBuildConfig', ['ts'], function(cb) {
       buildConfig = buildConfigFactory.rjsOptions;
       buildConfig = rjsConfigGenerator.generateModulesConfig(config.mainJs, config.scripts, buildConfig);
       cb();
@@ -155,19 +155,21 @@ module.exports = function(gulp, config, buildConfigFactory) {
     /**
      * Creates libs.all.js needed for creating libs bundle
      */
-    gulp.task('createLibsAllFile', ['babel'], function(cb) {
+    gulp.task('createLibsAllFile', ['ts'], function(cb) {
       rjsConfigGenerator.generateLibsAllFile(config.mainJs, config.scripts);
       cb();
     });
 
-    gulp.task('babel-copy-libs', function() {
+    gulp.task('ts-copy-libs', function() {
       return gulp.src(config.app + '/libs/**/*')
-        .pipe(gulp.dest(config.tmpBabel + '/libs'));
+        .pipe(gulp.dest(config.tmpTS + '/libs'));
     });
 
-    gulp.task('babel', ['babel-copy-libs'], function() {
+    gulp.task('ts', ['ts-copy-libs'], function() {
       return gulp.src(config.allJs)
-        .pipe($.babel())
+        .pipe($.typescript({
+          allowJs: true
+        }))
         .pipe(gulp.dest(config.scripts));
     });
   }
@@ -274,7 +276,7 @@ module.exports = function(gulp, config, buildConfigFactory) {
      * Removes temp files used for r.js compilation
      */
     gulp.task('removeRjsTemp', ['copyStandaloneFilesToTemp', 'copyBundlesToTemp'], function(done) {
-      return del([config.rjsTemp, config.scripts + '/libs.all.js', config.tmpBabel], done);
+      return del([config.rjsTemp, config.scripts + '/libs.all.js', config.tmpTS], done);
     });
 
   }

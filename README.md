@@ -11,31 +11,31 @@ module.exports = function () {
   var root = __dirname + '/';
 
   var config = {
-  
+
     /* Common direcotries */
     root: root, // Root
     app: root + 'app', // Application sources folder
     dist: root + 'dist', // Application distribution folder
     temp: root + '.tmp', // Temp folder location
-    
+
     /* When using SASS preprocesor */
     sassSrc: 'app/sass/**/*.scss', // This is where sass files are located
     sassDest: 'app/styles', // This is where compiled sass goes
     compassMixins: 'app/libs/compass-mixins/lib', // Compass mixins location
 
     /* When using LESS preprocessor */
-    
+
     lessSrc: ['app/less/**/*.less'], // This is where less files are located
     lessDest: 'app/styles/', // This is where compiled less goes
     bundledCss: 'main.css', // This is a bundled CSS file name
 
     /* Plugins config */
-    
+
     autoprefixerRules: ['last 1 version', '> 1%', 'ie 10', 'ie 9', 'ie 8', 'ie 7'], // Autoprefixer rules
     // Documentation for autoprefixerRules: https://github.com/ai/browserslist
 
     indexHtml: root + 'app/index.html', // Location of index.html file (main file of application)
-    mainJs: root + '.tmpBabel/scripts/main.js', // Location of main.js file in babel temp
+    mainJs: root + '.tmpTS/scripts/main.js', // Location of main.js file in TS temp
 
     allJs: root + 'app/scripts/**/*.js', // Location of all JS files
     allViews: root + 'app/views/**/*.html', // Location of all views
@@ -50,9 +50,9 @@ module.exports = function () {
 
     jshintrc: root + '.jshintrc', // JSHint rules file
     karmaConfig: root + 'karma.conf.js', // Karma config file
-    
-    scripts: root + '.tmpBabel/scripts',
-    tmpBabel: root + '.tmpBabel',
+
+    scripts: root + '.tmpTS/scripts',
+    tmpTS: root + '.tmpTS',
     rjsTemp: root + 'app/scripts/temp',
     tempScripts: root + '.tmp/scripts'
   };
