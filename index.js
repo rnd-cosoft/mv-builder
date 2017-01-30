@@ -4,6 +4,7 @@ function MvBuilder(gulp, config, buildConfig) {
 
   var common = require('./tasks/common')(gulp, config);
   var build = require('./tasks/build')(gulp, config, buildConfig);
+  var watch = require('./tasks/watch')(gulp, config);
 
   /**
    * List the available gulp tasks

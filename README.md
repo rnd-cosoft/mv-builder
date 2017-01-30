@@ -19,14 +19,14 @@ module.exports = function () {
     temp: root + '.tmp', // Temp folder location
 
     /* When using SASS preprocesor */
-    sassSrc: 'app/sass/**/*.scss', // This is where sass files are located
-    sassDest: 'app/styles', // This is where compiled sass goes
+    sassSrc: root + 'app/sass/**/*.scss', // This is where sass files are located
+    sassDest: root + 'app/styles', // This is where compiled sass goes
     compassMixins: 'app/libs/compass-mixins/lib', // Compass mixins location
 
     /* When using LESS preprocessor */
 
-    lessSrc: ['app/less/**/*.less'], // This is where less files are located
-    lessDest: 'app/styles/', // This is where compiled less goes
+    lessSrc: root + 'app/less/**/*.less', // This is where less files are located
+    lessDest: root + 'app/styles/', // This is where compiled less goes
     bundledCss: 'main.css', // This is a bundled CSS file name
 
     /* Plugins config */
@@ -46,7 +46,7 @@ module.exports = function () {
     dependenciesImages: root + 'app/libs/visma-nc3/dist/img/**/*', // Location of depending images
 
     sniffForTranslations: ['app/scripts/**/*.js', 'app/views/**/*.html', '!app/scripts/controllers/admin/**/*', '!app/views/admin/**/*'], // Files used to sniff missing translations
-    translationFiles: 'app/translations/*.json', // Actual translation json files
+    translationFiles: root + 'app/translations/*.json', // Actual translation json files
 
     jshintrc: root + '.jshintrc', // JSHint rules file
     karmaConfig: root + 'karma.conf.js', // Karma config file
@@ -54,7 +54,8 @@ module.exports = function () {
     scripts: root + '.tmpTS/scripts',
     tmpTS: root + '.tmpTS',
     rjsTemp: root + 'app/scripts/temp',
-    tempScripts: root + '.tmp/scripts'
+    tempScripts: root + '.tmp/scripts',
+    serveTmp: root + 'watch'
   };
 
 
@@ -186,3 +187,4 @@ List of available tasks:
 * `gulp compile-sass` - compiles SASS files
 * `gulp watch-sass` - watches for SASS files changes and triggers compile-sass task on them
 * `gulp allJs` - generates *.all.js files for shared modules
+* `gulp watch` - creates temp folder and watches for source changes. Transpiles JS files, compiles LESS/SASS, copies files, etc.

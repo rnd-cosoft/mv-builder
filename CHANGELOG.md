@@ -1,3 +1,8 @@
+### 0.5.3 (2017-01-30)
+
+* Full support for ES6 development. When developing it is highly
+  recommended to transpile JS code. For that use `gulp watch` task and link your watch directory to project ui.
+
 ### 0.5.2 (2017-01-27)
 
 * Replaced babel with typescript (update your configs!)
