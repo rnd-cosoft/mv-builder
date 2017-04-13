@@ -236,7 +236,7 @@ function MvBuilder(gulp, config) {
       }
 
       gulp.src([configUrl + '.js'])
-        .pipe($.uglify())
+        .pipe($.uglify({ preserveComments: 'license' }))
         .pipe(utils.addTimestampComment())
         .pipe(revAll.revision())
         .pipe(gulp.dest(configDest));
