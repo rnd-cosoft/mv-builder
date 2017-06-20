@@ -43,9 +43,7 @@ module.exports = function(gulp, config, buildConfigFactory) {
     }
 
     function uglify() {
-      return $.uglify({
-        preserveComments: 'license'
-      });
+      return $.uglify();
     }
   });
 
@@ -228,7 +226,9 @@ module.exports = function(gulp, config, buildConfigFactory) {
       }
 
       return gulp.src([configUrl + '.js'])
-        .pipe($.uglify())
+        .pipe($.uglify({
+          preserveComments: 'license'
+        }))
         .pipe(utils.addTimestampComment())
         .pipe(gulp.dest(config.tempScripts));
     });
