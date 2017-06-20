@@ -43,7 +43,9 @@ module.exports = function(gulp, config, buildConfigFactory) {
     }
 
     function uglify() {
-      return $.uglify();
+      return $.uglify({
+        preserveComments: 'license'
+      });
     }
   });
 
