@@ -1,3 +1,7 @@
+### 0.6.0 (2017-06-29)
+
+* Removed PhantomJS as dependency. Use ChromeHeadless instead
+
 ### 0.5.3 (2017-01-30)
 
 * Full support for ES6 development. When developing it is highly
