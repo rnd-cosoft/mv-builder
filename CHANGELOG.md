@@ -1,3 +1,7 @@
+### 0.6.3 (2017-09-11)
+
+* Moved ng-annotate later in the building process.
+
 ### 0.6.2 (2017-09-11)
 
 * Extended requireJs build entry points with component selector.
