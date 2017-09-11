@@ -1,3 +1,7 @@
+### 0.6.2 (2017-09-11)
+
+* Extended requireJs build entry points with component selector.
+
 ### 0.6.1 (2017-09-11)
 
 * Added ng-annotate to build process.
