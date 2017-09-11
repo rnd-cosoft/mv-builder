@@ -1,3 +1,7 @@
+### 0.6.1 (2017-09-11)
+
+* Added ng-annotate to build process.
+
 ### 0.6.0 (2017-06-29)
 
 * Removed PhantomJS as dependency. Use ChromeHeadless instead

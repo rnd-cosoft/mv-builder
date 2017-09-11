@@ -167,6 +167,7 @@ module.exports = function(gulp, config, buildConfigFactory) {
 
     gulp.task('ts', ['ts-copy-libs'], function() {
       return gulp.src(config.allJs)
+        .pipe($.ngAnnotate())
         .pipe($.typescript({
           allowJs: true
         }))
