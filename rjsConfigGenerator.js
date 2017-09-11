@@ -21,7 +21,7 @@ var globby = require('globby');
  * - only inner module requires are implemented with relative paths (./, ../)
  * - each module placed in separate folder
  * - shared modules are put in one directory (e.g. 'scripts/shared/[module1, module2, ...]/')
- * - files are named fileName.type.js, where type is one of [module, ctrl, all, config, factory, etc..] (exceptions possible)
+ * - files are named fileName.type.js, where type is one of [module, ctrl, component, all, config, factory, etc..] (exceptions possible)
  * - all libraries are configured in main.js paths config (between special comments)
  * - base module and bundle configs are specified, most base options have precedence over auto generated ones, arrays are concatenated
  * - modules config have module folder ($path) specified per module (exceptions possible)
@@ -81,7 +81,7 @@ module.exports = function() {
 
     function setModuleNameAndIncludes(module, moduleFolder) {
       var entryScripts = globby.sync(
-        ['**/*.ctrl.js', '**/*.all.js'],
+        ['**/*.ctrl.js', '**/*.component.js', '**/*.all.js'],
         { cwd: moduleFolder }
       );
       entryScripts = _.map(entryScripts, function(script) {
