@@ -1,3 +1,7 @@
+### 0.6.4 (2017-10-06)
+
+* Added option to preserve license comments.
+
 ### 0.6.3 (2017-09-11)
 
 * Moved ng-annotate later in the building process.
