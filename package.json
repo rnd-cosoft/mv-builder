@@ -39,7 +39,7 @@
     "jasmine-core": "^2.4.1",
     "jshint": "^2.8.0",
     "jshint-stylish": "^2.0.1",
-    "karma": "^0.13.19",
+    "karma": "^6.3.16",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^0.5.3",
     "karma-istanbul-instrumenter": "^0.0.2",
